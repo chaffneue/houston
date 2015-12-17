@@ -1,95 +1,17 @@
-#include <SoftwareSerial.h>
-SoftwareSerial serialPort4(13,9);
-
 #include <MIDI.h>
 #include <midi_Defs.h>
 #include <midi_Message.h>
 #include <midi_Namespace.h>
 #include <midi_Settings.h>
 
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, midi2);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, midi3);
-MIDI_CREATE_INSTANCE(SoftwareSerial, serialPort4, midi4);
+#include <Tlc5940.h>
+#include <tlc_config.h>
 
-#define _TASK_TIMECRITICAL
 #include <TaskScheduler.h>
-Scheduler scheduler;
 
 #include <LiquidCrystal.h>
 
 #include "Houston.h"
-
-//variables
-int tempo = 120;
-
-//display module
-const int lcRsPin = 12;
-const int lcEnablePin = 11;
-const int lcData4Pin = 5;
-const int lcData5Pin = 4;
-const int lcData6Pin = 3;
-const int lcData7Pin = 2;
-
-//tempo counter
-const int tempoRedPin = 24;
-const int tempoGreenPin = 23;
-const int tempoBluePin = 22;
-
-//channel buttons
-const int channelButtonPins[] = {46,48,50,52};
-const int channelButtonPinsLength = length(channelButtonPins);
-const int channelIndicatorPins[] = {47,49,51,53};
-
-//transport controls
-const int tempoUpPin = 38;
-const int tempoDownPin = 40;
-const int countInUpPin = 32;
-const int countInDownPin = 30;
-const int stopPin = 36;
-const int playPin = 27;
-const int tempoPollTime = 150;
-const int countInPollTime = 30;
-const int transportPollTime = 30;
-
-const int patterns[] = {
-  0b10000000,
-  0b01000000,
-  0b00100000,
-  0b00010000,
-  0b00001000,
-  0b00000100,
-  0b00000010,
-  0b00000001
-};
-const int patternsLength = length(patterns);
-int countIn = 4;
-int performanceStarted = 0;
-int channelCountIn[] = {-1,-1,-1,-1};
-const int channelCountInLength = length(channelCountIn);
-int quarterNoteTime = 500;
-int midiClockTime = 20;
-unsigned long clocks = 1;
-unsigned long quarterNotes = 1;
-unsigned long bars = 1;
-unsigned long vis = 0;
-
-LiquidCrystal lcd(lcRsPin, lcEnablePin, lcData4Pin, lcData5Pin, lcData6Pin, lcData7Pin);
-
-void printTempo() {
-  lcd.setCursor(5, 1);
-  lcd.print("   "); 
-  lcd.setCursor(5, 1);
-  lcd.print(tempo);  
-}
-
-void printCountIn() {
-  lcd.setCursor(14, 1);
-  lcd.print("  ");
-  lcd.setCursor(14, 1);
-  lcd.print(countIn);
-}
-
 Task tempoUpInteraction(tempoPollTime, -1, &tempoUpInteractionCallback);
 Task tempoDownInteraction(tempoPollTime, -1, &tempoDownInteractionCallback);
 Task countInUpInteraction(countInPollTime, -1, &countInUpInteractionCallback);
@@ -147,7 +69,7 @@ void dequeueChannel(int channel) {
   digitalWrite(channelIndicatorPins[channel], LOW);  
 }
 
-template<class MidiInterface> void startPerformance(int channel, MidiInterface &midiInterface) {
+void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   performanceStarted = 1;
   midiInterface.sendRealTime(midi::Start);
   comfortDownbeat.disable();
@@ -157,13 +79,13 @@ template<class MidiInterface> void startPerformance(int channel, MidiInterface &
   digitalWrite(channelIndicatorPins[channel], HIGH);  
 }
 
-template<class MidiInterface> void stopChannel(int channel, MidiInterface &midiInterface) {
+void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Stop);
   channelCountIn[channel] = -1;
   digitalWrite(channelIndicatorPins[channel], LOW);  
 }
 
-template<class MidiInterface> void enqueueChannel(int channel, MidiInterface &midiInterface) {
+void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Start);
   channelCountIn[channel] = countIn;
   switch(channel) {
@@ -512,75 +434,9 @@ void midiClockCallback() {
 }
 
 void setup() {
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
-
-  pinMode(39, OUTPUT);
-  pinMode(41, OUTPUT);
-  pinMode(43, OUTPUT);
-  
-  //Setup pins
-  pinMode(tempoRedPin, OUTPUT);
-  pinMode(tempoGreenPin, OUTPUT);
-  pinMode(tempoBluePin, OUTPUT);
-
-  pinMode(tempoUpPin, INPUT_PULLUP);
-  pinMode(tempoDownPin, INPUT_PULLUP);
-  pinMode(countInUpPin, INPUT_PULLUP);
-  pinMode(countInDownPin, INPUT_PULLUP);
-  pinMode(stopPin, INPUT_PULLUP);
-  pinMode(playPin, INPUT_PULLUP);
-
-  for(int i = 0; i < channelButtonPinsLength; i++) {
-    pinMode(channelButtonPins[i], INPUT_PULLUP);
-    pinMode(channelIndicatorPins[i], OUTPUT);
-  }
-
-  lcd.begin(16, 2);
-  lcd.setCursor(0, 0);
-  lcd.print("-= Test  Case =-");
-  lcd.setCursor(0, 1);
-  lcd.print("BPM: 120 CNT: 4");
-
-  midi1.begin(1);
-  midi2.begin(1);
-  midi3.begin(1);
-  midi4.begin(1);
-  
-  tempoUpInteraction.enable();
-  tempoDownInteraction.enable();
-  countInUpInteraction.enable();
-  countInDownInteraction.enable();
-  countInUpDebounce.disable();
-  countInDownDebounce.disable();
-  comfortDownbeat.enable();
-  downbeatFlashComplete.disable();
-  stopAllButtonInteraction.enable();
-  stopAllButtonInteractionDebounce.disable();
-  playAllButtonInteraction.enable();
-  playAllButtonInteractionDebounce.disable();
-  
-  channel1Interaction.enable();
-  channel1InteractionDebounce.disable();
-  channel1Pending.disable();
-  channel1PendingFlashComplete.disable();
-  
-  channel2Interaction.enable();
-  channel2InteractionDebounce.disable();
-  channel2Pending.disable();
-  channel2PendingFlashComplete.disable();
-  
-  channel3Interaction.enable();
-  channel3InteractionDebounce.disable();
-  channel3Pending.disable();
-  channel3PendingFlashComplete.disable();
-  
-  channel4Interaction.enable();
-  channel4InteractionDebounce.disable();
-  channel4Pending.disable();
-  channel4PendingFlashComplete.disable();
-  
-  midiClock.disable();
+  setupPinIo();
+  initLcd();
+  initMidi();
   
   scheduler.init();
   scheduler.addTask(tempoUpInteraction);
@@ -617,6 +473,41 @@ void setup() {
   scheduler.addTask(channel4PendingFlashComplete);
   
   scheduler.addTask(midiClock);
+
+  tempoUpInteraction.enable();
+  tempoDownInteraction.enable();
+  countInUpInteraction.enable();
+  countInDownInteraction.enable();
+  countInUpDebounce.disable();
+  countInDownDebounce.disable();
+  comfortDownbeat.enable();
+  downbeatFlashComplete.disable();
+  stopAllButtonInteraction.enable();
+  stopAllButtonInteractionDebounce.disable();
+  playAllButtonInteraction.enable();
+  playAllButtonInteractionDebounce.disable();
+  
+  channel1Interaction.enable();
+  channel1InteractionDebounce.disable();
+  channel1Pending.disable();
+  channel1PendingFlashComplete.disable();
+  
+  channel2Interaction.enable();
+  channel2InteractionDebounce.disable();
+  channel2Pending.disable();
+  channel2PendingFlashComplete.disable();
+  
+  channel3Interaction.enable();
+  channel3InteractionDebounce.disable();
+  channel3Pending.disable();
+  channel3PendingFlashComplete.disable();
+  
+  channel4Interaction.enable();
+  channel4InteractionDebounce.disable();
+  channel4Pending.disable();
+  channel4PendingFlashComplete.disable();
+  
+  midiClock.disable();
 
   delay(20);
 }
