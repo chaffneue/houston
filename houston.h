@@ -68,6 +68,45 @@
   
   LiquidCrystal lcd(LCD_RS, LCD_RW, LCD_ENABLE, LCD_D0, LCD_D1, LCD_D2, LCD_D3, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 
+  //callback declarations
+  void dequeueChannel(int channel);
+  void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
+  void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
+  void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
+  void channel1InteractionCallback();
+  void channel1InteractionDebounceCallback();
+  void channel1PendingCallback();
+  void channel1PendingFlashCompleteCallback();
+  void channel2InteractionCallback();
+  void channel2InteractionDebounceCallback();
+  void channel2PendingCallback();
+  void channel2PendingFlashCompleteCallback();
+  void channel3InteractionCallback();
+  void channel3InteractionDebounceCallback();
+  void channel3PendingCallback();
+  void channel3PendingFlashCompleteCallback();
+  void channel4InteractionCallback();
+  void channel4InteractionDebounceCallback();
+  void channel4PendingCallback();
+  void channel4PendingFlashCompleteCallback();
+  void comfortDownbeatCallback();
+  void downbeatFlashCompleteCallback();
+  void updateTempo();
+  void tempoUpInteractionCallback();
+  void tempoDownInteractionCallback();
+  void countInUpInteractionCallback();
+  void countInDownInteractionCallback();
+  void countInUpDebounceCallback();
+  void countInDownDebounceCallback();
+  void stopAllButtonInteractionCallback();
+  void stopAllButtonInteractionDebounceCallback();
+  void playAllButtonInteractionCallback();
+  void playAllButtonInteractionDebounceCallback();
+  void midiClockCallback();
+  
+
+
+
   const int tempoUpPin = TEMPO_UP_BUTTON_PIN;
   const int tempoDownPin = TEMPO_DOWN_BUTTON_PIN;
   const int tempoRedPin = TEMPO_LAMP_RED_PIN;
