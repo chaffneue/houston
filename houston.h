@@ -7,14 +7,14 @@
   #define LCD_RS 6
   #define LCD_RW 7
   #define LCD_ENABLE 8
-  #define LCD_D0 22
-  #define LCD_D1 23  
-  #define LCD_D2 24
-  #define LCD_D3 25
-  #define LCD_D4 26
-  #define LCD_D5 27  
-  #define LCD_D6 28
-  #define LCD_D7 29
+  #define LCD_D0 20
+  #define LCD_D1 21  
+  #define LCD_D2 22
+  #define LCD_D3 23
+  #define LCD_D4 24
+  #define LCD_D5 25  
+  #define LCD_D6 26
+  #define LCD_D7 27
 
   //tlc5940 pins
   #define TLC_SIN 51
@@ -24,9 +24,9 @@
   #define TLC_SCLK 12
   
   //tempo counter
-  #define TEMPO_LAMP_RED_PIN 48
+  #define TEMPO_LAMP_RED_PIN 46
   #define TEMPO_LAMP_GREEN_PIN 47
-  #define TEMPO_LAMP_BLUE_PIN 46
+  #define TEMPO_LAMP_BLUE_PIN 48
   
   //channel buttons
   #define CHANNEL_1_BUTTON_PIN 32
@@ -54,8 +54,10 @@
   #define POLL_TIME_TEMPO 150000
   #define POLL_TIME_COUNT_IN 30000
   #define POLL_TIME_TRANSPORT 30000
-  #define POLL_TIME_CHANNEL 30000
-
+  #define DOWNBEAT_LAMP_FLASH_OFF 10000
+  #define CHANNEL_PENDING_LAMP_ON 250000
+  #define CHANNEL_PENDING_LAMP_OFF 90000
+  
   //globals
   Scheduler scheduler;
   
@@ -75,27 +77,13 @@
   const int countInDownPin = COUNT_IN_DOWN_BUTTON_PIN;
   const int stopPin = STOP_ALL_BUTTON_PIN;
   const int playPin = PLAY_ALL_BUTTON_PIN;
-  const int tempoPollTime = POLL_TIME_TEMPO;
-  const int countInPollTime = POLL_TIME_COUNT_IN;
-  const int transportPollTime = POLL_TIME_TRANSPORT;
-  const int channelPollTime = POLL_TIME_CHANNEL;
-  const int patterns[] = {
-    0b10000000,
-    0b01000000,
-    0b00100000,
-    0b00010000,
-    0b00001000,
-    0b00000100,
-    0b00000010,
-    0b00000001
-  };
+  
+  unsigned int tempo = DEFAULT_TEMPO;
+  unsigned int countIn = DEFAULT_COUNT_IN;
+  unsigned long quarterNoteTime = calulateQuarterNoteTime(tempo);
+  unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);
 
-  int tempo = DEFAULT_TEMPO;
-  int quarterNoteTime = calulateQuarterNoteTime(tempo);
-  int midiClockTime = calulateMidiClockTime(quarterNoteTime);
-  int countIn = DEFAULT_COUNT_IN;
   int performanceStarted = 0;
-
   int channelCountIn[] = {-1,-1,-1,-1};
   int channelCountInLength = 4;
   int channelButtonPins[] = {CHANNEL_1_BUTTON_PIN, CHANNEL_2_BUTTON_PIN, CHANNEL_3_BUTTON_PIN, CHANNEL_4_BUTTON_PIN};
@@ -165,7 +153,7 @@
   void initLcd() {
     lcd.begin(16, 2);
     lcd.setCursor(0, 0);
-    lcd.print("-= Test  Case =-");
+    lcd.print("Houston.");
     lcd.setCursor(0, 1);
     lcd.print("BPM: 120 CNT: 4");
   }
@@ -175,5 +163,10 @@
     midi2.begin(1);
     midi3.begin(1);
     midi4.begin(1);
+  }
+
+  void initMatrix() {
+    Tlc.init(100);
+    delay(50);
   }
 #endif

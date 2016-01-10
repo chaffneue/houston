@@ -12,39 +12,39 @@
 #include <LiquidCrystal.h>
 
 #include "Houston.h"
-Task tempoUpInteraction(tempoPollTime, -1, &tempoUpInteractionCallback);
-Task tempoDownInteraction(tempoPollTime, -1, &tempoDownInteractionCallback);
-Task countInUpInteraction(countInPollTime, -1, &countInUpInteractionCallback);
-Task countInDownInteraction(countInPollTime, -1, &countInDownInteractionCallback);
-Task countInUpDebounce(countInPollTime, -1, &countInUpDebounceCallback);
-Task countInDownDebounce(countInPollTime, -1, &countInDownDebounceCallback);
+Task tempoUpInteraction(POLL_TIME_TEMPO, -1, &tempoUpInteractionCallback);
+Task tempoDownInteraction(POLL_TIME_TEMPO, -1, &tempoDownInteractionCallback);
+Task countInUpInteraction(POLL_TIME_COUNT_IN, -1, &countInUpInteractionCallback);
+Task countInDownInteraction(POLL_TIME_COUNT_IN, -1, &countInDownInteractionCallback);
+Task countInUpDebounce(POLL_TIME_COUNT_IN, -1, &countInUpDebounceCallback);
+Task countInDownDebounce(POLL_TIME_COUNT_IN, -1, &countInDownDebounceCallback);
 Task comfortDownbeat(quarterNoteTime, -1, &comfortDownbeatCallback);
-Task downbeatFlashComplete(10, 2, &downbeatFlashCompleteCallback);
-Task stopAllButtonInteraction(transportPollTime, -1, &stopAllButtonInteractionCallback);
-Task stopAllButtonInteractionDebounce(transportPollTime, -1, &stopAllButtonInteractionDebounceCallback);
-Task playAllButtonInteraction(transportPollTime, -1, &playAllButtonInteractionCallback);
-Task playAllButtonInteractionDebounce(transportPollTime, -1, &playAllButtonInteractionDebounceCallback);
+Task downbeatFlashComplete(DOWNBEAT_LAMP_FLASH_OFF, 2, &downbeatFlashCompleteCallback);
+Task stopAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionCallback);
+Task stopAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionDebounceCallback);
+Task playAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionCallback);
+Task playAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionDebounceCallback);
 Task midiClock(midiClockTime, -1, &midiClockCallback);
 
-Task channel1Interaction(transportPollTime, -1, &channel1InteractionCallback);
-Task channel1InteractionDebounce(transportPollTime, -1, &channel1InteractionDebounceCallback);
-Task channel1Pending(250, -1, &channel1PendingCallback);
-Task channel1PendingFlashComplete(90, 2, &channel1PendingFlashCompleteCallback);
+Task channel1Interaction(POLL_TIME_TRANSPORT, -1, &channel1InteractionCallback);
+Task channel1InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel1InteractionDebounceCallback);
+Task channel1Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel1PendingCallback);
+Task channel1PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel1PendingFlashCompleteCallback);
 
-Task channel2Interaction(transportPollTime, -1, &channel2InteractionCallback);
-Task channel2InteractionDebounce(transportPollTime, -1, &channel2InteractionDebounceCallback);
-Task channel2Pending(250, -1, &channel2PendingCallback);
-Task channel2PendingFlashComplete(90, 2, &channel2PendingFlashCompleteCallback);
+Task channel2Interaction(POLL_TIME_TRANSPORT, -1, &channel2InteractionCallback);
+Task channel2InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel2InteractionDebounceCallback);
+Task channel2Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel2PendingCallback);
+Task channel2PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel2PendingFlashCompleteCallback);
 
-Task channel3Interaction(transportPollTime, -1, &channel3InteractionCallback);
-Task channel3InteractionDebounce(transportPollTime, -1, &channel3InteractionDebounceCallback);
-Task channel3Pending(250, -1, &channel3PendingCallback);
-Task channel3PendingFlashComplete(90, 2, &channel3PendingFlashCompleteCallback);
+Task channel3Interaction(POLL_TIME_TRANSPORT, -1, &channel3InteractionCallback);
+Task channel3InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel3InteractionDebounceCallback);
+Task channel3Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel3PendingCallback);
+Task channel3PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel3PendingFlashCompleteCallback);
 
-Task channel4Interaction(transportPollTime, -1, &channel4InteractionCallback);
-Task channel4InteractionDebounce(transportPollTime, -1, &channel4InteractionDebounceCallback);
-Task channel4Pending(250, -1, &channel4PendingCallback);
-Task channel4PendingFlashComplete(90, 2, &channel4PendingFlashCompleteCallback);
+Task channel4Interaction(POLL_TIME_TRANSPORT, -1, &channel4InteractionCallback);
+Task channel4InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel4InteractionDebounceCallback);
+Task channel4Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel4PendingCallback);
+Task channel4PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel4PendingFlashCompleteCallback);
 
 void dequeueChannel(int channel) {
   channelCountIn[channel] = -1;
@@ -245,7 +245,7 @@ void channel4PendingFlashCompleteCallback() {
 }
 
 void comfortDownbeatCallback() {
-  digitalWrite(tempoBluePin, HIGH);
+  digitalWrite(tempoRedPin, HIGH);
   downbeatFlashComplete.restart();
 }
 
@@ -388,15 +388,9 @@ void midiClockCallback() {
   
   if(clocks % 24 == 1) {
     if(clocks == 1 || quarterNotes % 4 == 1) {
-      digitalWrite(tempoGreenPin, HIGH);
-
-      if(vis > 7) {
-        vis = 0; 
-      }
-
-
-      vis++;
+      digitalWrite(tempoBluePin, HIGH);
       bars++;
+
       for(int i = 0; i < channelCountInLength; i++) {
         if(channelCountIn[i] > 0) {
           channelCountIn[i]--;
@@ -424,8 +418,9 @@ void midiClockCallback() {
         }
       }
     } else {
-      digitalWrite(tempoRedPin, HIGH);
+      digitalWrite(tempoGreenPin, HIGH);
     }
+    
     downbeatFlashComplete.restart();
     midiClock.setInterval(midiClockTime);
     quarterNotes++;
@@ -437,6 +432,7 @@ void setup() {
   setupPinIo();
   initLcd();
   initMidi();
+  initMatrix();
   
   scheduler.init();
   scheduler.addTask(tempoUpInteraction);
