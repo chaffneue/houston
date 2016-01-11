@@ -50,6 +50,7 @@ Task updateMatrix(MATRIX_ROW_UPDATE_INTERVAL, -1, &updateMatrixCallback);
 
 void dequeueChannel(int channel) {
   channelCountIn[channel] = -1;
+  channelBars[channel] = -1;
   switch(channel) {
     case 0:
       channel1Pending.disable();
@@ -84,12 +85,19 @@ void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInte
 void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Stop);
   channelCountIn[channel] = -1;
+  channelBars[channel] = -1;
   digitalWrite(channelIndicatorPins[channel], LOW);  
 }
 
 void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Start);
   channelCountIn[channel] = countIn;
+  if(playHead + countIn > 63) {
+    channelBars[channel] = playHead + countIn - 64;    
+  } else {
+    channelBars[channel] = playHead + countIn;
+  }
+    
   switch(channel) {
     case 0:
       channel1Pending.restart();
@@ -327,6 +335,7 @@ void stopAllButtonInteractionCallback() {
     performanceStarted = 0;
     for(int i = 0; i < channelButtonPinsLength; i++) {
       channelCountIn[i] = -1; 
+      channelBars[i] = -1;
       digitalWrite(channelIndicatorPins[i], LOW);
     }
     clocks = 1;
@@ -381,15 +390,19 @@ void playAllButtonInteractionDebounceCallback() {
 
 void midiClockCallback() {
   if(channelCountIn[0] == 0) {
+    channelBars[0] = -1;
     midi1.sendRealTime(midi::Clock);
   }
   if(channelCountIn[1] == 0) {
+    channelBars[1] = -1;
     midi2.sendRealTime(midi::Clock);
   }
   if(channelCountIn[2] == 0) {
+    channelBars[2] = -1;
     midi3.sendRealTime(midi::Clock);
   }
   if(channelCountIn[3] == 0) {
+    channelBars[3] = -1;
     midi4.sendRealTime(midi::Clock);
   }
   
@@ -448,7 +461,17 @@ void updateMatrixCallback() {
   Tlc.clear();
   
   for (matrixColumn = 0; matrixColumn < 8; matrixColumn++) {
-    if(matrixRow * 8 + matrixColumn == playHead) {
+    currentGridLocation = matrixRow * 8 + matrixColumn;
+    
+    if(channelBars[0] != -1 && channelBars[0] == currentGridLocation) {
+      setColor(red, matrixColumn);
+    } else if (channelBars[1] != -1 && channelBars[1] == currentGridLocation) {
+      setColor(green, matrixColumn);
+    } else if (channelBars[2] != -1 && channelBars[2] == currentGridLocation) {
+      setColor(yellow, matrixColumn);
+    } else if (channelBars[3] != -1 && channelBars[3] == currentGridLocation) {
+      setColor(purple, matrixColumn);
+    } else if (currentGridLocation == playHead) {
       setColor(white, matrixColumn);
     } else if (matrixColumn == 0 || matrixColumn == 4) { 
       setColor(lightBlue, matrixColumn);

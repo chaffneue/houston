@@ -49,7 +49,7 @@
   #define PLAY_ALL_BUTTON_PIN 44
   
   //startup settings
-  #define DEFAULT_TEMPO 300
+  #define DEFAULT_TEMPO 120
   #define DEFAULT_COUNT_IN 4
   #define POLL_TIME_TEMPO 150000
   #define POLL_TIME_COUNT_IN 30000
@@ -121,13 +121,13 @@
   const int blueOutputs[] = {8, 9, 10, 11, 12, 13, 14, 15};
   
   // Matrix Color Palette {R,G,B}
-  const int darkBlue[] = {0, 15, 30};
-  const int lightBlue[] = {0, 50, 50};
-  const int teal[] = {100, 500, 300}; 
-  const int red[] = {500, 30, 0};
+  const int darkBlue[] = {0, 5, 30};
+  const int lightBlue[] = {0, 30, 30};
+  const int green[] = {0, 1200, 0}; 
+  const int red[] = {1800, 0, 0};
   const int white[] = {1000, 300, 100};
-  const int yellow[] = {500, 300, 0};
-  const int purple[] = {500, 0, 500};
+  const int yellow[] = {2400, 300, 0};
+  const int purple[] = {1500, 0, 1000};
 
   unsigned int tempo = DEFAULT_TEMPO;
   unsigned int countIn = DEFAULT_COUNT_IN;
@@ -139,9 +139,12 @@
   int channelButtonPinsLength = 4;
   int channelIndicatorPins[] = {CHANNEL_1_LAMP_PIN, CHANNEL_2_LAMP_PIN, CHANNEL_3_LAMP_PIN, CHANNEL_4_LAMP_PIN};
   int channelIndicatorPinsLength = 4;
+  int channelBars[] = {-1,-1,-1,-1};
+  int channelBarsLength = 4;
   int matrixColumn = 0;
   int matrixRow = 0;
   int playHead = 0;
+  int currentGridLocation = 1;
   
   unsigned long clocks = 1;
   unsigned long quarterNotes = 1;
@@ -210,7 +213,10 @@
     lcd.setCursor(0, 0);
     lcd.print("Houston.");
     lcd.setCursor(0, 1);
-    lcd.print("BPM: 120 CNT: 4");
+    lcd.print("BPM: ");
+    lcd.print(tempo);
+    lcd.print(" CNT: ");
+    lcd.print(countIn);
   }
 
   void initMidi() {
