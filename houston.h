@@ -49,7 +49,7 @@
   #define PLAY_ALL_BUTTON_PIN 44
   
   //startup settings
-  #define DEFAULT_TEMPO 120
+  #define DEFAULT_TEMPO 300
   #define DEFAULT_COUNT_IN 4
   #define POLL_TIME_TEMPO 150000
   #define POLL_TIME_COUNT_IN 30000
@@ -57,6 +57,7 @@
   #define DOWNBEAT_LAMP_FLASH_OFF 10000
   #define CHANNEL_PENDING_LAMP_ON 250000
   #define CHANNEL_PENDING_LAMP_OFF 90000
+  #define MATRIX_ROW_UPDATE_INTERVAL 2500
   
   //globals
   Scheduler scheduler;
@@ -103,9 +104,7 @@
   void playAllButtonInteractionCallback();
   void playAllButtonInteractionDebounceCallback();
   void midiClockCallback();
-  
-
-
+  void updateMatrixCallback();
 
   const int tempoUpPin = TEMPO_UP_BUTTON_PIN;
   const int tempoDownPin = TEMPO_DOWN_BUTTON_PIN;
@@ -116,11 +115,22 @@
   const int countInDownPin = COUNT_IN_DOWN_BUTTON_PIN;
   const int stopPin = STOP_ALL_BUTTON_PIN;
   const int playPin = PLAY_ALL_BUTTON_PIN;
+  const int rowOutputs[] = {16, 17, 18, 19, 28, 29, 30, 31};
+  const int redOutputs[] = {0, 1, 2, 3, 4, 5, 6, 7};
+  const int greenOutputs[] = {27, 26, 25, 24, 23, 22, 21, 20};
+  const int blueOutputs[] = {8, 9, 10, 11, 12, 13, 14, 15};
   
+  // Matrix Color Palette {R,G,B}
+  const int darkBlue[] = {0, 15, 30};
+  const int lightBlue[] = {0, 50, 50};
+  const int teal[] = {100, 500, 300}; 
+  const int red[] = {500, 30, 0};
+  const int white[] = {1000, 300, 100};
+  const int yellow[] = {500, 300, 0};
+  const int purple[] = {500, 0, 500};
+
   unsigned int tempo = DEFAULT_TEMPO;
   unsigned int countIn = DEFAULT_COUNT_IN;
-  unsigned long quarterNoteTime = calulateQuarterNoteTime(tempo);
-  unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);
 
   int performanceStarted = 0;
   int channelCountIn[] = {-1,-1,-1,-1};
@@ -129,10 +139,16 @@
   int channelButtonPinsLength = 4;
   int channelIndicatorPins[] = {CHANNEL_1_LAMP_PIN, CHANNEL_2_LAMP_PIN, CHANNEL_3_LAMP_PIN, CHANNEL_4_LAMP_PIN};
   int channelIndicatorPinsLength = 4;
+  int matrixColumn = 0;
+  int matrixRow = 0;
+  int playHead = 0;
+  
   unsigned long clocks = 1;
   unsigned long quarterNotes = 1;
   unsigned long bars = 1;
   unsigned long vis = 0;
+  unsigned long quarterNoteTime = calulateQuarterNoteTime(tempo);
+  unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);
 
   void printTempo() {
     lcd.setCursor(5, 1);
@@ -202,6 +218,12 @@
     midi2.begin(1);
     midi3.begin(1);
     midi4.begin(1);
+  }
+  
+  void setColor(const int color[], int matrixColumn) {
+    Tlc.set(redOutputs[matrixColumn], color[0]);
+    Tlc.set(greenOutputs[matrixColumn], color[1]);
+    Tlc.set(blueOutputs[matrixColumn], color[2]);
   }
 
   void initMatrix() {

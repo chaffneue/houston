@@ -46,6 +46,8 @@ Task channel4InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel4InteractionDe
 Task channel4Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel4PendingCallback);
 Task channel4PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel4PendingFlashCompleteCallback);
 
+Task updateMatrix(MATRIX_ROW_UPDATE_INTERVAL, -1, &updateMatrixCallback);
+
 void dequeueChannel(int channel) {
   channelCountIn[channel] = -1;
   switch(channel) {
@@ -330,6 +332,7 @@ void stopAllButtonInteractionCallback() {
     clocks = 1;
     quarterNotes = 1;
     bars = 1;
+    playHead = 0;
     stopAllButtonInteractionDebounce.restart();
     stopAllButtonInteraction.disable();
   }
@@ -345,19 +348,23 @@ void stopAllButtonInteractionDebounceCallback() {
 void playAllButtonInteractionCallback() {
   if (digitalRead(playPin) == LOW && performanceStarted == 0) {
     comfortDownbeat.disable();
+    
     performanceStarted = 1;
     bars = 1;
+    playHead = 0;
     clocks = 1;
     quarterNotes = 1;
-    bars = 1;
+
     midi1.sendRealTime(midi::Start);
     midi2.sendRealTime(midi::Start);
     midi3.sendRealTime(midi::Start);
     midi4.sendRealTime(midi::Start);
+    
     for(int i = 0; i < channelButtonPinsLength; i++) {
       channelCountIn[i] = 0; 
       digitalWrite(channelIndicatorPins[i], HIGH);
     }
+    
     playAllButtonInteractionDebounce.restart();
     playAllButtonInteraction.disable();
     delay(1);
@@ -389,8 +396,17 @@ void midiClockCallback() {
   if(clocks % 24 == 1) {
     if(clocks == 1 || quarterNotes % 4 == 1) {
       digitalWrite(tempoBluePin, HIGH);
+      
       bars++;
 
+      if(clocks > 24) {
+        playHead++;
+  
+        if(playHead > 63) {
+          playHead = 0;
+        }
+      }
+      
       for(int i = 0; i < channelCountInLength; i++) {
         if(channelCountIn[i] > 0) {
           channelCountIn[i]--;
@@ -426,6 +442,30 @@ void midiClockCallback() {
     quarterNotes++;
   }
   clocks++;
+}
+
+void updateMatrixCallback() {
+  Tlc.clear();
+  
+  for (matrixColumn = 0; matrixColumn < 8; matrixColumn++) {
+    if(matrixRow * 8 + matrixColumn == playHead) {
+      setColor(white, matrixColumn);
+    } else if (matrixColumn == 0 || matrixColumn == 4) { 
+      setColor(lightBlue, matrixColumn);
+    } else {
+      setColor(darkBlue, matrixColumn);      
+    }
+  }
+  
+  //column control
+  Tlc.set(rowOutputs[matrixRow], 1000);    
+  Tlc.update();
+  
+  if(matrixRow > 6) {
+    matrixRow = 0;
+  } else {
+    matrixRow++;
+  }
 }
 
 void setup() {
@@ -469,6 +509,7 @@ void setup() {
   scheduler.addTask(channel4PendingFlashComplete);
   
   scheduler.addTask(midiClock);
+  scheduler.addTask(updateMatrix);
 
   tempoUpInteraction.enable();
   tempoDownInteraction.enable();
@@ -504,6 +545,7 @@ void setup() {
   channel4PendingFlashComplete.disable();
   
   midiClock.disable();
+  updateMatrix.enable();
 
   delay(20);
 }
