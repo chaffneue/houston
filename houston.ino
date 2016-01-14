@@ -340,7 +340,6 @@ void stopAllButtonInteractionCallback() {
     }
     clocks = 1;
     quarterNotes = 1;
-    bars = 1;
     playHead = 0;
     stopAllButtonInteractionDebounce.restart();
     stopAllButtonInteraction.disable();
@@ -359,7 +358,6 @@ void playAllButtonInteractionCallback() {
     comfortDownbeat.disable();
     
     performanceStarted = 1;
-    bars = 1;
     playHead = 0;
     clocks = 1;
     quarterNotes = 1;
@@ -407,13 +405,14 @@ void midiClockCallback() {
   }
   
   if(clocks % 24 == 1) {
-    if(clocks == 1 || quarterNotes % 4 == 1) {
-      digitalWrite(tempoBluePin, HIGH);
-      
-      bars++;
+    if(clocks == 1 || quarterNotes > 4) {
+      digitalWrite(tempoGreenPin, HIGH);
+
+      quarterNotes = 1;
 
       if(clocks > 24) {
         playHead++;
+        clocks = 1;
   
         if(playHead > 63) {
           playHead = 0;
@@ -447,7 +446,7 @@ void midiClockCallback() {
         }
       }
     } else {
-      digitalWrite(tempoGreenPin, HIGH);
+      digitalWrite(tempoBluePin, HIGH);
     }
     
     downbeatFlashComplete.restart();

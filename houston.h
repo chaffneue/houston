@@ -145,11 +145,9 @@
   int matrixRow = 0;
   int playHead = 0;
   int currentGridLocation = 1;
+  int quarterNotes = 1;
+  int clocks = 1;
   
-  unsigned long clocks = 1;
-  unsigned long quarterNotes = 1;
-  unsigned long bars = 1;
-  unsigned long vis = 0;
   unsigned long quarterNoteTime = calulateQuarterNoteTime(tempo);
   unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);
 
