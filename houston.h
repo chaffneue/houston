@@ -1,3 +1,34 @@
+/*
+Houston Multiple MIDI Master Interface
+
+@author Richard Hoar <richard.hoar@streeme.com>
+@see https://github.com/chaffneue/houston
+@see houston.ino for changelog
+
+License
+---
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Richard Hoar <richard.hoar@streeme.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE. */
 #ifndef Houston_h
   #define Houston_h
   #define calulateQuarterNoteTime(bpm) (floor((1/((float)bpm / 60) * 4000000)/4))
@@ -151,13 +182,17 @@
   unsigned long quarterNoteTime = calulateQuarterNoteTime(tempo);
   unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);
 
+  /** Print the current tempo value to the LCD
+   */
   void printTempo() {
     lcd.setCursor(5, 1);
     lcd.print("   "); 
     lcd.setCursor(5, 1);
     lcd.print(tempo);  
   }
-  
+
+  /** Print the current count in value to the LCD
+   */
   void printCountIn() {
     lcd.setCursor(14, 1);
     lcd.print("  ");
@@ -165,6 +200,8 @@
     lcd.print(countIn);
   }
 
+  /** Register the IO pins 
+   */
   void setupPinIo() {
     pinMode(LCD_RS, OUTPUT);
     pinMode(LCD_RW, OUTPUT);
@@ -206,6 +243,8 @@
     pinMode(PLAY_ALL_BUTTON_PIN, INPUT_PULLUP);
   }
 
+  /** Init the 1602 16x2 liquid crystal display 
+   */
   void initLcd() {
     lcd.begin(16, 2);
     lcd.setCursor(0, 0);
@@ -217,19 +256,27 @@
     lcd.print(countIn);
   }
 
+  /** Start the MIDI interfaces
+   */
   void initMidi() {
     midi1.begin(1);
     midi2.begin(1);
     midi3.begin(1);
     midi4.begin(1);
   }
-  
+
+  /** Set a "pixel" color on the 8x8 RGB display matrix 
+   *  @param: color - a supported color from the palette
+   *  @param: matrixColumn - the position to write the pixel in the current row
+   */
   void setColor(const int color[], int matrixColumn) {
     Tlc.set(redOutputs[matrixColumn], color[0]);
     Tlc.set(greenOutputs[matrixColumn], color[1]);
     Tlc.set(blueOutputs[matrixColumn], color[2]);
   }
 
+  /** Initialize the matrix - it takes a while to settle
+   */
   void initMatrix() {
     Tlc.init(100);
     delay(50);

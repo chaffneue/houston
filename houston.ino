@@ -1,3 +1,42 @@
+/*
+Houston Multiple MIDI Master Interface
+
+@author Richard Hoar <richard.hoar@streeme.com>
+@see https://github.com/chaffneue/houston
+
+Change Log
+---
+1.0.0 - January 13, 2016
+  - Initial Release
+
+1.0.1 - February 2, 2016
+  - Minor Code cleanup and integration of official microsecond support in Task Scheduler
+  - Added BOM and docblocks
+
+License
+---
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Richard Hoar <richard.hoar@streeme.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE. */
 #include <MIDI.h>
 #include <midi_Defs.h>
 #include <midi_Message.h>
@@ -7,47 +46,53 @@
 #include <Tlc5940.h>
 #include <tlc_config.h>
 
+#define _TASK_MICRO_RES
 #include <TaskScheduler.h>
 
 #include <LiquidCrystal.h>
 
 #include "Houston.h"
-Task tempoUpInteraction(POLL_TIME_TEMPO, -1, &tempoUpInteractionCallback);
-Task tempoDownInteraction(POLL_TIME_TEMPO, -1, &tempoDownInteractionCallback);
-Task countInUpInteraction(POLL_TIME_COUNT_IN, -1, &countInUpInteractionCallback);
-Task countInDownInteraction(POLL_TIME_COUNT_IN, -1, &countInDownInteractionCallback);
-Task countInUpDebounce(POLL_TIME_COUNT_IN, -1, &countInUpDebounceCallback);
-Task countInDownDebounce(POLL_TIME_COUNT_IN, -1, &countInDownDebounceCallback);
-Task comfortDownbeat(quarterNoteTime, -1, &comfortDownbeatCallback);
-Task downbeatFlashComplete(DOWNBEAT_LAMP_FLASH_OFF, 2, &downbeatFlashCompleteCallback);
-Task stopAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionCallback);
-Task stopAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionDebounceCallback);
-Task playAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionCallback);
-Task playAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionDebounceCallback);
-Task midiClock(midiClockTime, -1, &midiClockCallback);
 
-Task channel1Interaction(POLL_TIME_TRANSPORT, -1, &channel1InteractionCallback);
-Task channel1InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel1InteractionDebounceCallback);
-Task channel1Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel1PendingCallback);
-Task channel1PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel1PendingFlashCompleteCallback);
+// Task implementation 
+Task tempoUpInteraction(POLL_TIME_TEMPO, -1, &tempoUpInteractionCallback, &scheduler, true);
+Task tempoDownInteraction(POLL_TIME_TEMPO, -1, &tempoDownInteractionCallback, &scheduler, true);
+Task countInUpInteraction(POLL_TIME_COUNT_IN, -1, &countInUpInteractionCallback, &scheduler, true);
+Task countInDownInteraction(POLL_TIME_COUNT_IN, -1, &countInDownInteractionCallback, &scheduler, true);
+Task countInUpDebounce(POLL_TIME_COUNT_IN, -1, &countInUpDebounceCallback, &scheduler);
+Task countInDownDebounce(POLL_TIME_COUNT_IN, -1, &countInDownDebounceCallback, &scheduler);
+Task comfortDownbeat(quarterNoteTime, -1, &comfortDownbeatCallback, &scheduler, true);
+Task downbeatFlashComplete(DOWNBEAT_LAMP_FLASH_OFF, 2, &downbeatFlashCompleteCallback, &scheduler);
+Task stopAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionCallback, &scheduler, true);
+Task stopAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionDebounceCallback, &scheduler);
+Task playAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionCallback, &scheduler, true);
+Task playAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionDebounceCallback, &scheduler);
+Task midiClock(midiClockTime, -1, &midiClockCallback, &scheduler);
 
-Task channel2Interaction(POLL_TIME_TRANSPORT, -1, &channel2InteractionCallback);
-Task channel2InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel2InteractionDebounceCallback);
-Task channel2Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel2PendingCallback);
-Task channel2PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel2PendingFlashCompleteCallback);
+Task channel1Interaction(POLL_TIME_TRANSPORT, -1, &channel1InteractionCallback, &scheduler, true);
+Task channel1InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel1InteractionDebounceCallback, &scheduler);
+Task channel1Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel1PendingCallback, &scheduler);
+Task channel1PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel1PendingFlashCompleteCallback, &scheduler);
 
-Task channel3Interaction(POLL_TIME_TRANSPORT, -1, &channel3InteractionCallback);
-Task channel3InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel3InteractionDebounceCallback);
-Task channel3Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel3PendingCallback);
-Task channel3PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel3PendingFlashCompleteCallback);
+Task channel2Interaction(POLL_TIME_TRANSPORT, -1, &channel2InteractionCallback, &scheduler, true);
+Task channel2InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel2InteractionDebounceCallback, &scheduler);
+Task channel2Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel2PendingCallback, &scheduler);
+Task channel2PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel2PendingFlashCompleteCallback, &scheduler);
 
-Task channel4Interaction(POLL_TIME_TRANSPORT, -1, &channel4InteractionCallback);
-Task channel4InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel4InteractionDebounceCallback);
-Task channel4Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel4PendingCallback);
-Task channel4PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel4PendingFlashCompleteCallback);
+Task channel3Interaction(POLL_TIME_TRANSPORT, -1, &channel3InteractionCallback, &scheduler, true);
+Task channel3InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel3InteractionDebounceCallback, &scheduler);
+Task channel3Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel3PendingCallback, &scheduler);
+Task channel3PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel3PendingFlashCompleteCallback, &scheduler);
 
-Task updateMatrix(MATRIX_ROW_UPDATE_INTERVAL, -1, &updateMatrixCallback);
+Task channel4Interaction(POLL_TIME_TRANSPORT, -1, &channel4InteractionCallback, &scheduler, true);
+Task channel4InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel4InteractionDebounceCallback, &scheduler);
+Task channel4Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel4PendingCallback, &scheduler);
+Task channel4PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel4PendingFlashCompleteCallback, &scheduler);
 
+Task updateMatrix(MATRIX_ROW_UPDATE_INTERVAL, -1, &updateMatrixCallback, &scheduler, true);
+
+/** Remove a MIDI channel from the queued state
+ * @param: channel - the channel to dequeue
+ */
 void dequeueChannel(int channel) {
   channelCountIn[channel] = -1;
   channelBars[channel] = -1;
@@ -72,6 +117,10 @@ void dequeueChannel(int channel) {
   digitalWrite(channelIndicatorPins[channel], LOW);  
 }
 
+/** Start the performance
+ *  @param: channel - the channel initiating the statee change 
+ *  @param: midiInterface - the midi interface pointer for the channel
+ */
 void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   performanceStarted = 1;
   midiInterface.sendRealTime(midi::Start);
@@ -82,6 +131,9 @@ void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInte
   digitalWrite(channelIndicatorPins[channel], HIGH);  
 }
 
+/** Stop a single channel
+ *  @param: channel - the channel to stop immediately 
+ */
 void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Stop);
   channelCountIn[channel] = -1;
@@ -89,6 +141,10 @@ void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface
   digitalWrite(channelIndicatorPins[channel], LOW);  
 }
 
+/** Queue a channel for playback 
+ *  @param: channel - the channel initiating the statee change 
+ *  @param: midiInterface - the midi interface pointer for the channel
+ */
 void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Start);
   channelCountIn[channel] = countIn;
@@ -114,6 +170,8 @@ void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterf
   }
 }
 
+/** Scan the buttons assigned to the channel for state changes
+ */
 void channel1InteractionCallback() {
   if(digitalRead(channelButtonPins[0]) == LOW) {
     if (performanceStarted == 0) {
@@ -131,6 +189,8 @@ void channel1InteractionCallback() {
   }
 }
 
+/** Debounce the channel interaction until the button returns to a high value
+ */
 void channel1InteractionDebounceCallback() {
   if(digitalRead(channelButtonPins[0]) == HIGH) {
      channel1Interaction.restart();
@@ -138,17 +198,23 @@ void channel1InteractionDebounceCallback() {
   }
 }
 
+/** Flash the channel's LED to indicate it is queued for playback
+ */
 void channel1PendingCallback() {
   digitalWrite(channelIndicatorPins[0], HIGH);
   channel1PendingFlashComplete.restart();
 }
 
+/** Complete the flash by pulling the channel indicator low again  
+ */
 void channel1PendingFlashCompleteCallback() {
   if(!channel1PendingFlashComplete.isFirstIteration()) {
     digitalWrite(channelIndicatorPins[0], LOW);
   }
 }
 
+/** Scan the buttons assigned to the channel for state changes
+ */
 void channel2InteractionCallback() {
   if(digitalRead(channelButtonPins[1]) == LOW) {
     if (performanceStarted == 0) {
@@ -166,6 +232,8 @@ void channel2InteractionCallback() {
   }
 }
 
+/** Debounce the channel interaction until the button returns to a high value
+ */
 void channel2InteractionDebounceCallback() {
   if(digitalRead(channelButtonPins[1]) == HIGH) {
      channel2Interaction.restart();
@@ -173,17 +241,23 @@ void channel2InteractionDebounceCallback() {
   }
 }
 
+/** Flash the channel's LED to indicate it is queued for playback
+ */
 void channel2PendingCallback() {
   digitalWrite(channelIndicatorPins[1], HIGH);
   channel2PendingFlashComplete.restart();
 }
 
+/** Complete the flash by pulling the channel indicator low again  
+ */
 void channel2PendingFlashCompleteCallback() {
   if(!channel2PendingFlashComplete.isFirstIteration()) {
     digitalWrite(channelIndicatorPins[1], LOW);
   }
 }
 
+/** Scan the buttons assigned to the channel for state changes
+ */
 void channel3InteractionCallback() {
   if(digitalRead(channelButtonPins[2]) == LOW) {
     if (performanceStarted == 0) {
@@ -201,6 +275,8 @@ void channel3InteractionCallback() {
   }
 }
 
+/** Debounce the channel interaction until the button returns to a high value
+ */
 void channel3InteractionDebounceCallback() {
   if(digitalRead(channelButtonPins[2]) == HIGH) {
      channel3Interaction.restart();
@@ -208,17 +284,23 @@ void channel3InteractionDebounceCallback() {
   }
 }
 
+/** Flash the channel's LED to indicate it is queued for playback
+ */
 void channel3PendingCallback() {
   digitalWrite(channelIndicatorPins[2], HIGH);
   channel3PendingFlashComplete.restart();
 }
 
+/** Complete the flash by pulling the channel indicator low again  
+ */
 void channel3PendingFlashCompleteCallback() {
   if(!channel3PendingFlashComplete.isFirstIteration()) {
     digitalWrite(channelIndicatorPins[2], LOW);
   }
 }
 
+/** Scan the buttons assigned to the channel for state changes
+ */
 void channel4InteractionCallback() {
   if(digitalRead(channelButtonPins[3]) == LOW) {
     if (performanceStarted == 0) {
@@ -236,6 +318,8 @@ void channel4InteractionCallback() {
   }
 }
 
+/** Debounce the channel interaction until the button returns to a high value
+ */
 void channel4InteractionDebounceCallback() {
   if(digitalRead(channelButtonPins[3]) == HIGH) {
      channel4Interaction.restart();
@@ -243,22 +327,30 @@ void channel4InteractionDebounceCallback() {
   }
 }
 
+/** Flash the channel's LED to indicate it is queued for playback
+ */
 void channel4PendingCallback() {
   digitalWrite(channelIndicatorPins[3], HIGH);
   channel4PendingFlashComplete.restart();
 }
 
+/** Complete the flash by pulling the channel indicator low again  
+ */
 void channel4PendingFlashCompleteCallback() {
   if(!channel4PendingFlashComplete.isFirstIteration()) {
     digitalWrite(channelIndicatorPins[3], LOW);
   }
 }
 
+/** Indicate playback is not yet started by flashing the downbeat lamp an alternate color
+ */
 void comfortDownbeatCallback() {
   digitalWrite(tempoRedPin, HIGH);
   downbeatFlashComplete.restart();
 }
 
+/** Clear the downbeat lamp by pulling all colors low
+ */
 void downbeatFlashCompleteCallback() {
   if(!downbeatFlashComplete.isFirstIteration()) {
     digitalWrite(tempoRedPin, LOW);
@@ -267,6 +359,8 @@ void downbeatFlashCompleteCallback() {
   }
 }
 
+/** Update the global tempo value and display the value on screen
+ */
 void updateTempo() {
   quarterNoteTime = calulateQuarterNoteTime(tempo);
   midiClockTime = calulateMidiClockTime(quarterNoteTime);
@@ -274,6 +368,8 @@ void updateTempo() {
   printTempo();
 }
 
+/** Poll for the tempo up button 
+ */
 void tempoUpInteractionCallback() {
   if (digitalRead(tempoUpPin) == LOW && tempo < 300) { 
     tempo++;
@@ -281,13 +377,17 @@ void tempoUpInteractionCallback() {
   }  
 }
 
+/** Poll for the tempo down button 
+ */
 void tempoDownInteractionCallback() {
   if (digitalRead(tempoDownPin) == LOW && tempo > 30) {
     tempo--;
     updateTempo();
   }
 }
- 
+
+/** Poll for the "count in" up button  
+ */
 void countInUpInteractionCallback() {
   if (digitalRead(countInUpPin) == LOW && countIn < 64 ) {
     countIn++;
@@ -297,6 +397,8 @@ void countInUpInteractionCallback() {
   }  
 }
 
+/** Poll for the "count in" down button
+ */
 void countInDownInteractionCallback() {
   if (digitalRead(countInDownPin) == LOW && countIn > 1) {
     countIn--;
@@ -306,6 +408,8 @@ void countInDownInteractionCallback() {
   }
 }
 
+/** debounce the count in button by waiting until the pin is high again
+ */
 void countInUpDebounceCallback() {
   if(digitalRead(countInUpPin) == HIGH) {
      countInUpInteraction.restart();
@@ -313,6 +417,8 @@ void countInUpDebounceCallback() {
   }
 }
 
+/** debounce the count in button by waiting until the pin is high again
+ */
 void countInDownDebounceCallback() {
   if(digitalRead(countInDownPin) == HIGH) {
      countInDownInteraction.restart();
@@ -320,6 +426,8 @@ void countInDownDebounceCallback() {
   }
 }
 
+/** Poll for the "stop all channels" button
+ */
 void stopAllButtonInteractionCallback() {
   if (digitalRead(stopPin) == LOW && performanceStarted == 1) {
     midiClock.disable();
@@ -346,6 +454,8 @@ void stopAllButtonInteractionCallback() {
   }
 }
 
+/** Debounce the stop all button by waiting until the pin is high again
+ */
 void stopAllButtonInteractionDebounceCallback() {
   if (digitalRead(stopPin) == HIGH) {
     stopAllButtonInteraction.restart();
@@ -353,6 +463,8 @@ void stopAllButtonInteractionDebounceCallback() {
   }
 }
 
+/** Poll for the "play all channels" button
+ */
 void playAllButtonInteractionCallback() {
   if (digitalRead(playPin) == LOW && performanceStarted == 0) {
     comfortDownbeat.disable();
@@ -379,6 +491,8 @@ void playAllButtonInteractionCallback() {
   }
 }
 
+/** Debounce the play all channels button by waiting until the pin is high again
+ */
 void playAllButtonInteractionDebounceCallback() {
   if (digitalRead(playPin) == HIGH) {
     playAllButtonInteraction.restart();
@@ -386,6 +500,8 @@ void playAllButtonInteractionDebounceCallback() {
   }
 }
 
+/** The main MIDI loop during playback
+ */
 void midiClockCallback() {
   if(channelCountIn[0] == 0) {
     channelBars[0] = -1;
@@ -456,6 +572,8 @@ void midiClockCallback() {
   clocks++;
 }
 
+/** Update the 8x8 RGB matrix display to give feedback about queued channels and the playhead location
+ */
 void updateMatrixCallback() {
   Tlc.clear();
   
@@ -495,81 +613,6 @@ void setup() {
   initLcd();
   initMidi();
   initMatrix();
-  
-  scheduler.init();
-  scheduler.addTask(tempoUpInteraction);
-  scheduler.addTask(tempoDownInteraction);
-  scheduler.addTask(countInUpInteraction);
-  scheduler.addTask(countInUpDebounce);
-  scheduler.addTask(countInDownDebounce);  
-  scheduler.addTask(countInDownInteraction);
-  scheduler.addTask(stopAllButtonInteraction);
-  scheduler.addTask(stopAllButtonInteractionDebounce);
-  scheduler.addTask(playAllButtonInteraction);
-  scheduler.addTask(playAllButtonInteractionDebounce);
-  scheduler.addTask(comfortDownbeat);
-  scheduler.addTask(downbeatFlashComplete);
-  
-  scheduler.addTask(channel1Interaction);
-  scheduler.addTask(channel1InteractionDebounce);
-  scheduler.addTask(channel1Pending);
-  scheduler.addTask(channel1PendingFlashComplete);
-  
-  scheduler.addTask(channel2Interaction);
-  scheduler.addTask(channel2InteractionDebounce);
-  scheduler.addTask(channel2Pending);
-  scheduler.addTask(channel2PendingFlashComplete);
-
-  scheduler.addTask(channel3Interaction);
-  scheduler.addTask(channel3InteractionDebounce);
-  scheduler.addTask(channel3Pending);
-  scheduler.addTask(channel3PendingFlashComplete);
-
-  scheduler.addTask(channel4Interaction);
-  scheduler.addTask(channel4InteractionDebounce);
-  scheduler.addTask(channel4Pending);
-  scheduler.addTask(channel4PendingFlashComplete);
-  
-  scheduler.addTask(midiClock);
-  scheduler.addTask(updateMatrix);
-
-  tempoUpInteraction.enable();
-  tempoDownInteraction.enable();
-  countInUpInteraction.enable();
-  countInDownInteraction.enable();
-  countInUpDebounce.disable();
-  countInDownDebounce.disable();
-  comfortDownbeat.enable();
-  downbeatFlashComplete.disable();
-  stopAllButtonInteraction.enable();
-  stopAllButtonInteractionDebounce.disable();
-  playAllButtonInteraction.enable();
-  playAllButtonInteractionDebounce.disable();
-  
-  channel1Interaction.enable();
-  channel1InteractionDebounce.disable();
-  channel1Pending.disable();
-  channel1PendingFlashComplete.disable();
-  
-  channel2Interaction.enable();
-  channel2InteractionDebounce.disable();
-  channel2Pending.disable();
-  channel2PendingFlashComplete.disable();
-  
-  channel3Interaction.enable();
-  channel3InteractionDebounce.disable();
-  channel3Pending.disable();
-  channel3PendingFlashComplete.disable();
-  
-  channel4Interaction.enable();
-  channel4InteractionDebounce.disable();
-  channel4Pending.disable();
-  channel4PendingFlashComplete.disable();
-  
-  midiClock.disable();
-  updateMatrix.enable();
-
-  delay(20);
 }
 
 void loop() {

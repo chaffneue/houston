@@ -1,0 +1,83 @@
+Partlist
+
+Part       Value                    Device                   Package                Description                                                         PROD_ID  
+BEAT       LED-RGB-CC-THRUCLEAR     LED-RGB-CC-THRUCLEAR     LED-RGB-THRU           RGB Through-hole common cathode LED                                 DIO-08418
+C1         0.1uF                    CAPEZ                    CAP-PTH-SMALLEZ        Capacitor                                                                    
+C2         0.1uF                    CAPEZ                    CAP-PTH-SMALLEZ        Capacitor                                                                    
+C3         0.1uF                    CAPEZ                    CAP-PTH-SMALLEZ        Capacitor                                                                    
+C4         0.1uF                    CAPEZ                    CAP-PTH-SMALLEZ        Capacitor                                                                    
+C5         470uF                    CAP_POLPTH4              CPOL-RADIAL-1000UF-25V Capacitor Polarized                                                          
+CHANNEL_1  SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+CHANNEL_2  SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+CHANNEL_3  SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+CHANNEL_4  SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+COUNT_DOWN SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+COUNT_UP   SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+JP1                                 PINHD-1X6/90             1X06/90                PIN HEADER                                                                   
+JP2                                 PINHD-1X4/90             1X04/90                PIN HEADER                                                                   
+JP3                                 PINHD-1X15/90            1X15/90                PIN HEADER                                                                   
+JP4                                 PINHD-1X16               1X16                   PIN HEADER                                                                   
+JP5                                 PINHD-1X7                1X07                   PIN HEADER                                                                   
+JP6                                 PINHD-1X16               1X16                   PIN HEADER                                                                   
+JP7                                 PINHD-1X4                1X04                   PIN HEADER                                                                   
+JP8                                 PINHD-1X6                1X06                   PIN HEADER                                                                   
+JP9                                 PINHD-1X7/90             1X07/90                PIN HEADER                                                                   
+JP10                                PINHD-1X15-CB            1X15-CB                PIN HEADER                                                                   
+LED1       MATRIX                   ORM-2088-RGB-5           ORM-2088-RGB-5         ORM 2088RGB-5 8x8 LED RGB Matrix                                             
+LED2       CH1                      LED3MM                   LED3MM                 LED                                                                          
+LED3       CH2                      LED3MM                   LED3MM                 LED                                                                          
+LED4       CH3                      LED3MM                   LED3MM                 LED                                                                          
+LED5       CH4                      LED3MM                   LED3MM                 LED                                                                          
+PLAY       SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+Q1         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q2         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q3         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q4         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q5         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q6         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q7         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+Q8         2N3906                   2N3906                   TO92                   PNP Transistor                                                               
+R1         4K7                      R-US_0411/3V             0411V                  RESISTOR, American symbol                                                    
+R2         10K                      R-US_0411/3V             0411V                  RESISTOR, American symbol                                                    
+R3         4K7                      R-US_0411/3V             0411V                  RESISTOR, American symbol                                                    
+R4         10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R5         1K                       R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R6         1K                       R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R7         1K                       R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R8         1K                       R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R9         1K                       R-US_0207/2V             0207/2V                RESISTOR, American symbol                                                    
+R10        1K                       R-US_0207/2V             0207/2V                RESISTOR, American symbol                                                    
+R11        1K                       R-US_0207/2V             0207/2V                RESISTOR, American symbol                                                    
+R12        1K                       R-US_0207/2V             0207/2V                RESISTOR, American symbol                                                    
+R13        1K                       R-US_0207/2V             0207/2V                RESISTOR, American symbol                                                    
+R14        1K                       R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R15        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R16        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R17        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R18        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R19        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R20        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R21        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R22        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R23        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R24        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R25        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R26        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R27        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R28        10K                      R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R29        100K                     R-US_0207/10             0207/10                RESISTOR, American symbol                                                    
+R30        150                      R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R31        10K                      R-TRIMM3296W             RTRIM3296W             Trimm resistor                                                               
+R32        150                      R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+R33        150                      R-US_0204/7              0204/7                 RESISTOR, American symbol                                                    
+STOP       SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+TEMPO_DOWN SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+TEMPO_UP   SPST                     40-XX-ROUND              B3F-40XX-ROUND         OMRON SWITCH                                                                 
+U$1        MIDI_CONN_FEMALE_SUPPORT MIDI_CONN_FEMALE_SUPPORT DIN_5_FEMALE_SUPPORT   MIDI connector with strain relief (DIN-5 female)                             
+U$2        MIDI_CONN_FEMALE_SUPPORT MIDI_CONN_FEMALE_SUPPORT DIN_5_FEMALE_SUPPORT   MIDI connector with strain relief (DIN-5 female)                             
+U$3        MIDI_CONN_FEMALE_SUPPORT MIDI_CONN_FEMALE_SUPPORT DIN_5_FEMALE_SUPPORT   MIDI connector with strain relief (DIN-5 female)                             
+U$4        MIDI_CONN_FEMALE_SUPPORT MIDI_CONN_FEMALE_SUPPORT DIN_5_FEMALE_SUPPORT   MIDI connector with strain relief (DIN-5 female)                             
+U$6        2560                     2560                     MEDUINO2560            Meduino 2560 PCB                                                             
+U1         TLC5940-NT               TLC5940-NT               DIL28-3                16-channel LED Driver with Dot Correction and Grayscale PWM Control          
+U2         TLC5940-NT               TLC5940-NT               DIL28-3                16-channel LED Driver with Dot Correction and Grayscale PWM Control          
+X2         HD44780LCD-1602          HD44780LCD-1602          LCD1602                HD44780 LCD                                                                  
