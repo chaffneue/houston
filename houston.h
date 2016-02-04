@@ -82,7 +82,7 @@ SOFTWARE. */
   //startup settings
   #define DEFAULT_TEMPO 120
   #define DEFAULT_COUNT_IN 4
-  #define POLL_TIME_TEMPO 150000
+  #define POLL_TIME_TEMPO 130000
   #define POLL_TIME_COUNT_IN 30000
   #define POLL_TIME_TRANSPORT 30000
   #define DOWNBEAT_LAMP_FLASH_OFF 10000
@@ -137,20 +137,29 @@ SOFTWARE. */
   void midiClockCallback();
   void updateMatrixCallback();
 
-  const int tempoUpPin = TEMPO_UP_BUTTON_PIN;
-  const int tempoDownPin = TEMPO_DOWN_BUTTON_PIN;
-  const int tempoRedPin = TEMPO_LAMP_RED_PIN;
-  const int tempoGreenPin = TEMPO_LAMP_GREEN_PIN;
-  const int tempoBluePin = TEMPO_LAMP_BLUE_PIN;
-  const int countInUpPin = COUNT_IN_UP_BUTTON_PIN;
-  const int countInDownPin = COUNT_IN_DOWN_BUTTON_PIN;
-  const int stopPin = STOP_ALL_BUTTON_PIN;
-  const int playPin = PLAY_ALL_BUTTON_PIN;
   const int rowOutputs[] = {16, 17, 18, 19, 28, 29, 30, 31};
   const int redOutputs[] = {0, 1, 2, 3, 4, 5, 6, 7};
   const int greenOutputs[] = {27, 26, 25, 24, 23, 22, 21, 20};
   const int blueOutputs[] = {8, 9, 10, 11, 12, 13, 14, 15};
-  
+
+  Input<TEMPO_UP_BUTTON_PIN> tempoUpPin;
+  Input<TEMPO_DOWN_BUTTON_PIN> tempoDownPin;
+  Output<TEMPO_LAMP_RED_PIN> tempoRedPin;
+  Output<TEMPO_LAMP_GREEN_PIN> tempoGreenPin;
+  Output<TEMPO_LAMP_BLUE_PIN> tempoBluePin;
+  Input<COUNT_IN_UP_BUTTON_PIN> countInUpPin;
+  Input<COUNT_IN_DOWN_BUTTON_PIN> countInDownPin;
+  Input<STOP_ALL_BUTTON_PIN> stopPin;
+  Input<PLAY_ALL_BUTTON_PIN> playPin;
+  Input<CHANNEL_1_BUTTON_PIN> channel1ButtonPin;
+  Input<CHANNEL_2_BUTTON_PIN> channel2ButtonPin;
+  Input<CHANNEL_3_BUTTON_PIN> channel3ButtonPin;
+  Input<CHANNEL_4_BUTTON_PIN> channel4ButtonPin;
+  Output<CHANNEL_1_LAMP_PIN> channel1LampPin;
+  Output<CHANNEL_2_LAMP_PIN> channel2LampPin;
+  Output<CHANNEL_3_LAMP_PIN> channel3LampPin;
+  Output<CHANNEL_4_LAMP_PIN> channel4LampPin;
+
   // Matrix Color Palette {R,G,B}
   const int darkBlue[] = {0, 5, 30};
   const int lightBlue[] = {0, 30, 30};
@@ -166,10 +175,6 @@ SOFTWARE. */
   int performanceStarted = 0;
   int channelCountIn[] = {-1,-1,-1,-1};
   int channelCountInLength = 4;
-  int channelButtonPins[] = {CHANNEL_1_BUTTON_PIN, CHANNEL_2_BUTTON_PIN, CHANNEL_3_BUTTON_PIN, CHANNEL_4_BUTTON_PIN};
-  int channelButtonPinsLength = 4;
-  int channelIndicatorPins[] = {CHANNEL_1_LAMP_PIN, CHANNEL_2_LAMP_PIN, CHANNEL_3_LAMP_PIN, CHANNEL_4_LAMP_PIN};
-  int channelIndicatorPinsLength = 4;
   int channelBars[] = {-1,-1,-1,-1};
   int channelBarsLength = 4;
   int matrixColumn = 0;
@@ -220,27 +225,6 @@ SOFTWARE. */
     pinMode(TLC_XLAT, OUTPUT);
     pinMode(TLC_GSCLK, OUTPUT);
     pinMode(TLC_SCLK, OUTPUT);
-      
-    pinMode(TEMPO_LAMP_RED_PIN, OUTPUT);
-    pinMode(TEMPO_LAMP_GREEN_PIN, OUTPUT);
-    pinMode(TEMPO_LAMP_BLUE_PIN, OUTPUT);
-      
-    pinMode(CHANNEL_1_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(CHANNEL_2_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(CHANNEL_3_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(CHANNEL_4_BUTTON_PIN, INPUT_PULLUP);
-      
-    pinMode(CHANNEL_1_LAMP_PIN, OUTPUT);
-    pinMode(CHANNEL_2_LAMP_PIN, OUTPUT);
-    pinMode(CHANNEL_3_LAMP_PIN, OUTPUT);
-    pinMode(CHANNEL_4_LAMP_PIN, OUTPUT);
-      
-    pinMode(TEMPO_UP_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(TEMPO_DOWN_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(COUNT_IN_UP_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(COUNT_IN_DOWN_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(STOP_ALL_BUTTON_PIN, INPUT_PULLUP);
-    pinMode(PLAY_ALL_BUTTON_PIN, INPUT_PULLUP);
   }
 
   /** Init the 1602 16x2 liquid crystal display 
