@@ -21,7 +21,7 @@ This device provides a solid performance playback platform that:
 
 * 4 independent, hardware UART synchronized midi channels (+/- 0.1 BPM jitter) 
 * Large, intuitive displays to show all performance parameters including the count-in time, the current tempo and the current measure
-* Huge, 12mm OSRAM buttons to prevent fat-fingering the controls
+* Huge, 12mm OMRON buttons to prevent fat-fingering the controls
 * A clear, multicolored beat lamp to help visualize the beat
 * Microcontroller based with very limited responsibilities which greatly reduces the risk of a crash during a performance
 * Usb powered and programmed
