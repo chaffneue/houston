@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Houston - The Multi-Master Midi Clock by chaffneue</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Houston - The Multi-Master Midi Clock</h1>
+      <h2 class="project-tagline">A live performance oriented midi playback controller for 4 independent channels. Sync your gear to the beat every time!</h2>
+      <a href="https://github.com/chaffneue/houston" class="btn">View on GitHub</a>
+      <a href="https://github.com/chaffneue/houston/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/chaffneue/houston/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h2>
+<a id="houston-multi-master-midi-clock" class="anchor" href="#houston-multi-master-midi-clock" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Houston Multi Master Midi Clock</h2>
+
+<p><img src="https://c2.staticflickr.com/2/1579/24839778126_2c2a3d20b4_z.jpg" alt="Meet Houston"></p>
+
+<p>Introducing Houston: A bomb-proof, OSHW multi-master MIDI clock that you can build for about $50 using readily available parts. Make it the center of your live pa rig!</p>
+
+<h2>
+<a id="the-problem" class="anchor" href="#the-problem" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Problem</h2>
+
+<p>Normally, MIDI devices are slaved to a single master unit, but what if something about that unit crashes or blocks playback for whatever reason? Short answer: "kablammo!" Additionally, if a slave device fails to playback, there's not much recourse for resyncing it to the rest of the performance. In live performance applications, this means that one wrong move on the sequencers means a major interruption of the music.</p>
+
+<p>This device provides a solid performance playback platform that:</p>
+
+<ul>
+<li>Drastically lowers the chances of a full audio lockup (DAW crashes, PC hardware communication issues, playback-blocking sequencer parameter changes, etc.)</li>
+<li>Automatically stops, rewinds and resyncs up to 4 channels of MIDI slaves back into the mix on the downbeat with a selectable count-in. It dramatically frees up your hands to focus on the mix and switch to new songs unit by unit without interruption.<br>
+</li>
+</ul>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>4 independent, hardware UART synchronized midi channels (+/- 0.1 BPM jitter) </li>
+<li>Large, intuitive displays to show all performance parameters including the count-in time, the current tempo and the current measure</li>
+<li>Huge, 12mm OSRAM buttons to prevent fat-fingering the controls</li>
+<li>A clear, multicolored beat lamp to help visualize the beat</li>
+<li>Microcontroller based with very limited responsibilities which greatly reduces the risk of a crash during a performance</li>
+<li>Usb powered and programmed</li>
+<li>Open Source Hardware - contribute to making it better or fork it and add your own requirements</li>
+<li>Based on commodity parts freely available on eBay and the ubiqitous Arduino Mega2560 R3 board and development environment </li>
+</ul>
+
+<h2>
+<a id="build-notes" class="anchor" href="#build-notes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build Notes</h2>
+
+<p>The hardware comprises of 6 modules. I have built these modules using separate perf boards in the prototype. </p>
+
+<ul>
+<li>The LCD Display (shows tempo and count-in parameters)</li>
+<li>The 8x8 Matrix display (used to show track position)</li>
+<li>The beat lamp display </li>
+<li>The Control surface board</li>
+<li>The Arduino board</li>
+<li>The MIDI IO board</li>
+</ul>
+
+<h3>
+<a id="the-lcd-display" class="anchor" href="#the-lcd-display" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The LCD Display</h3>
+
+<p>Based on a 1602 (16 char x 2 line) LCD, you really only need to add an adapter board for LCD contrast, since the Arduino bit bangs each pin directly. See the photos below for how I mounted the little breakout board. </p>
+
+<h3>
+<a id="the-8x8-matrix-display-board" class="anchor" href="#the-8x8-matrix-display-board" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The 8x8 matrix display board</h3>
+
+<p>The 8x8 matrix is the trickiest part to build, but it's very hard to mess up. If you've never used this hardware before, you can breadboard it first to ensureall the parts work before soldering them. I used a double sided perf board with vias to build the prototype. This allows me to install the TLC5940 chips on the bottom of the board and the transistors and jumpers on the top side which is neatly sandwiched between the LED matrix when assembled. Note that the 100K pull up resistors on the transistor bases are optional (they reduce switching noise at slower refresh speeds). I didn't use them in the final build due to space constraints.  </p>
+
+<h3>
+<a id="the-beat-lamp" class="anchor" href="#the-beat-lamp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The beat lamp</h3>
+
+<p>I used an off the shelf multicolor led mounded to a small pcb and added a 1k current limiting resistor attached to ground. My board had mislabelled the color channeld, so do check the colors are as you expect (you can always fix it in firmware later as long as ground is correct). The model used was KY-016: <a href="https://tkkrlab.nl/wiki/Arduino_KY-016_3-color_LED_module">https://tkkrlab.nl/wiki/Arduino_KY-016_3-color_LED_module</a>.  </p>
+
+<h3>
+<a id="the-control-surface" class="anchor" href="#the-control-surface" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The control surface</h3>
+
+<p>I build the control surface board using a 7cm x 9cm single sided perf board. The only lesson I have with this is to find a board that isn't quite as cheaply drilled as mine was. Some of the button holes needed a lot of filing to line up bacause the pads and mounting holes were not to the same spec. The switches do have quite chunky leads, so really use a lot of solder on at least two contact pins to make sure nothing comes loose. Dry fit the heck out of the button panel before you drill :) </p>
+
+<h3>
+<a id="the-arduino-board" class="anchor" href="#the-arduino-board" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Arduino board</h3>
+
+<p>This is a specialized clone that nice and small while retaining a good quality USB programmer. It is readily available on ebay and epalsite for around $10-$15 here <a href="http://www.epalsite.com/store/meduino-mega2560-r3-pro-mini-board-small-size.html">http://www.epalsite.com/store/meduino-mega2560-r3-pro-mini-board-small-size.html</a>
+It's compatible with the 2560 R3 and coes with a bootloader already installed. See the firmware instructions below to build and flash this sucker. </p>
+
+<h3>
+<a id="the-midi-io-board" class="anchor" href="#the-midi-io-board" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The MIDI IO board</h3>
+
+<p>I cut down a perfboard to the width measurements shown in the case <a href="https://github.com/chaffneue/houston/blob/master/illustrator/houston-back-panel.pdf">https://github.com/chaffneue/houston/blob/master/illustrator/houston-back-panel.pdf</a> the board's length isn't too important, but do use a good quality pcb as the flimsy PC mount Din jacks can be hard on pads. Additionally, once mounted, use a zap strap or a few screws behind the midi jack to relieve the strain of inserting the din plugs. </p>
+
+<h3>
+<a id="prototype-build-photos" class="anchor" href="#prototype-build-photos" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Prototype Build Photos</h3>
+
+<p>Higher resolution photo album here:</p>
+
+<p><a href="https://www.flickr.com/photos/chaffneue/albums/72157663690274979">https://www.flickr.com/photos/chaffneue/albums/72157663690274979</a></p>
+
+<p>The controls, midi, beat lamp and assembled matrix board. I ended up putting the control panel pin header on the bottom of the board.
+<img src="https://c2.staticflickr.com/2/1554/24772597651_0b3c4b72b7_c.jpg" alt="Prototype boards"></p>
+
+<p>The Embeddable Meduino 2560 R3 board
+<img src="https://c2.staticflickr.com/2/1592/24839725796_4130377276_c.jpg" alt="The brains"></p>
+
+<p>The Matrix board IC, header and transistor placement
+<img src="https://c2.staticflickr.com/2/1680/24239139963_fec8a018e4.jpg" alt="Bottom Side">
+<img src="https://c2.staticflickr.com/2/1667/24839724806_0ac5885f90.jpg" alt="Top Side"></p>
+
+<p>Case details - The prototype is made with a steel 3.5" external HD enclosure which can be had for $10-$20. Punch the holes nice and deep and drill them out carefully. I used a 2,3,5 and 12mm drill bit and a small hobby file set to clean up the burrs. I used a nibbler tool for the LCD and midi jack case openings. The better clamped down the case is while drilling, the better the finish. I used some painters tape to avoid scratching the paint as much as possible.</p>
+
+<p><img src="https://c2.staticflickr.com/2/1559/24772569491_ccf54a892d_c.jpg" alt="Punching the holes">
+<img src="https://c2.staticflickr.com/2/1443/24748092312_9d1bb364e4_c.jpg" alt="Drilling a million holes"></p>
+
+<p>Cabling - note the orientation of the switch plate and it's header. You can also see the adapter board for the LCD screen on its pin header. 
+<img src="https://c2.staticflickr.com/2/1551/24498397969_68e669834e_c.jpg" alt="Routing the cables"></p>
+
+<p>The back panel interface openings
+<img src="https://c2.staticflickr.com/2/1456/24237887604_a43d87637e_c.jpg" alt="Back panel"></p>
+
+<h2>
+<a id="building-the-firmware" class="anchor" href="#building-the-firmware" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building the Firmware</h2>
+
+<p>You'll need </p>
+
+<ul>
+<li>The Github Desktop app <a href="https://desktop.github.com/">https://desktop.github.com/</a>
+</li>
+<li>The Arduino IDE <a href="https://www.arduino.cc/en/Main/Software">https://www.arduino.cc/en/Main/Software</a>
+</li>
+</ul>
+
+<p>The project is buildable from source using the Arduino IDE's built in make file. All you need to do is fork to your own private copy then git clone using Github Desktop (your forks will show up automagically in Github Desktop :)). The nice thing about forking is that you can (and should) change the project with impunity. Want i2c parts? go for it! Different matrix drivers? CV sync? hell yes! do it! The firmware code is documented and separated into discrete tasks, so it should be easy to extend to your live rig's needs.    </p>
+
+<p>The {arduino_ide_project_path} is usually in your "My Documents/Arduino" folder on windows and "/path/to/user/Documents/Arduino" on the mac </p>
+
+<p>Fork and clone the firmware sketches into {arduino_ide_project_path}
+<a href="https://github.com/chaffneue/houston">https://github.com/chaffneue/houston</a></p>
+
+<p>Fork and clone the following libraries in {arduino_ide_project_path}/libraries:
+<a href="https://github.com/chaffneue/DirectIO">https://github.com/chaffneue/DirectIO</a>
+<a href="https://github.com/chaffneue/TaskScheduler">https://github.com/chaffneue/TaskScheduler</a>
+<a href="https://github.com/chaffneue/LiquidCrystal">https://github.com/chaffneue/LiquidCrystal</a>
+<a href="https://github.com/chaffneue/TLC5940">https://github.com/chaffneue/TLC5940</a>
+<a href="https://github.com/chaffneue/arduino_midi_library">https://github.com/chaffneue/arduino_midi_library</a></p>
+
+<p>In the Arduino IDE, load the houston sketch from {arduino_ide_project_path}/houston/houston.ino</p>
+
+<p>Plug your Houston box into USB and choose:</p>
+
+<ul>
+<li>Board Type: Arduino/Genuino Mega or Mega 2560</li>
+<li>Processor: ATmega2560 (Mega 2560)</li>
+<li>Port: Whatever port was found after plugging in the arduino board</li>
+<li>Programmer: AVRISP mkII</li>
+</ul>
+
+<p>Then click the upload (-&gt;) button to build and upload the firmware. It's a good idea to do this as a first step and dry test the components on a breadboard.</p>
+
+<p>And damnit. Have fun!</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/chaffneue/houston">Houston - The Multi-Master Midi Clock</a> is maintained by <a href="https://github.com/chaffneue">chaffneue</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
