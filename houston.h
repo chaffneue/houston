@@ -80,7 +80,7 @@ SOFTWARE. */
   #define PLAY_ALL_BUTTON_PIN 44
   
   //startup settings
-  #define DEFAULT_TEMPO 120
+  #define DEFAULT_TEMPO 120.0
   #define DEFAULT_COUNT_IN 4
   #define POLL_TIME_TEMPO 130000
   #define POLL_TIME_COUNT_IN 30000
@@ -169,7 +169,7 @@ SOFTWARE. */
   const int yellow[] = {2400, 300, 0};
   const int purple[] = {1500, 0, 1000};
 
-  unsigned int tempo = DEFAULT_TEMPO;
+  double tempo = DEFAULT_TEMPO;
   unsigned int countIn = DEFAULT_COUNT_IN;
 
   int performanceStarted = 0;
@@ -190,10 +190,10 @@ SOFTWARE. */
   /** Print the current tempo value to the LCD
    */
   void printTempo() {
-    lcd.setCursor(5, 1);
-    lcd.print("   "); 
-    lcd.setCursor(5, 1);
-    lcd.print(tempo);  
+    lcd.setCursor(0, 1);
+    lcd.print("     ");
+    lcd.setCursor(0, 1);
+    lcd.print(tempo, 1);  
   }
 
   /** Print the current count in value to the LCD
@@ -234,9 +234,9 @@ SOFTWARE. */
     lcd.setCursor(0, 0);
     lcd.print("Houston.");
     lcd.setCursor(0, 1);
-    lcd.print("BPM: ");
-    lcd.print(tempo);
-    lcd.print(" CNT: ");
+    lcd.print(tempo, 1);
+    lcd.setCursor(6, 1);
+    lcd.print(" COUNT: ");
     lcd.print(countIn);
   }
 

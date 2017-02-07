@@ -408,7 +408,7 @@ void updateTempo() {
  */
 void tempoUpInteractionCallback() {
   if (tempoUpPin == LOW && tempo < 300) { 
-    tempo++;
+    tempo = tempo + 0.1;
     updateTempo();
   }  
 }
@@ -417,7 +417,7 @@ void tempoUpInteractionCallback() {
  */
 void tempoDownInteractionCallback() {
   if (tempoDownPin == LOW && tempo > 30) {
-    tempo--;
+    tempo = tempo - 0.1;
     updateTempo();
   }
 }
