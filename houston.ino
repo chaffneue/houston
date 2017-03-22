@@ -16,6 +16,12 @@ Change Log
 1.0.2 - February 3, 2016
   - Converting digitalwrite abstraction to DirectIO to increase bit banging speed of the main sketch
   - Integrating startNow() functionality in Task Scheduler to prevent cascading tasks on startup
+
+1.0.3 - March 3, 2017
+  - Adding fractional tempos to one decimal place
+  - Making stop and start behaviour more consistent through the app
+  - Adding a song pointer reset to ensure patterns start from the beginning
+  - Moving midi start to immediatly before the ticks while enqueued so the gear doesn't time out
   
 License
 ---
@@ -128,34 +134,21 @@ void dequeueChannel(int channel) {
 }
 
 /** Start the performance
- *  @param: channel - the channel initiating the statee change 
+ *  @param: channel - the channel initiating the state change 
  *  @param: midiInterface - the midi interface pointer for the channel
  */
 void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   performanceStarted = 1;
-  midiInterface.sendRealTime(midi::Start);
+  playChannel(channel, midiInterface);
   comfortDownbeat.disable();
   delay(1); //halt program execution so we don't run the chance of confusing the midi device
   channelCountIn[channel] = 0;
   midiClock.restart();
-  switch(channel) {
-    case 0:
-      channel1LampPin = HIGH;
-      break;
-    case 1:
-      channel2LampPin = HIGH;
-      break;
-    case 2:
-      channel3LampPin = HIGH;
-      break;
-    case 3:
-      channel4LampPin = HIGH;
-      break;
-  } 
 }
 
 /** Stop a single channel
- *  @param: channel - the channel to stop immediately 
+ *  @param: channel - the channel to stop immediately
+ *  @param: midiInterface - the midi interface pointer for the channel
  */
 void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
   midiInterface.sendRealTime(midi::Stop);
@@ -163,26 +156,65 @@ void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface
   channelBars[channel] = -1;
   switch(channel) {
     case 0:
+      channel1Pending.disable();
+      channel1PendingFlashComplete.disable();
       channel1LampPin = LOW;
       break;
     case 1:
+      channel2Pending.disable();
+      channel2PendingFlashComplete.disable();
       channel2LampPin = LOW;
       break;
     case 2:
+      channel3Pending.disable();
+      channel3PendingFlashComplete.disable();
       channel3LampPin = LOW;
       break;
     case 3:
+      channel4Pending.disable();
+      channel4PendingFlashComplete.disable();
       channel4LampPin = LOW;
       break;
   }  
 }
 
+/** Start playback for a channel
+ *  @param: channel - the channel initiating the state change 
+ *  @param: midiInterface - the midi interface pointer for the channel
+ */
+void playChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
+  midiInterface.sendSongPosition(0);
+  midiInterface.sendRealTime(midi::Start);
+
+  switch(channel) {
+    case 0:
+      channel1Pending.disable();
+      channel1PendingFlashComplete.disable();
+      channel1LampPin = HIGH;
+      break;
+    case 1:
+      channel2Pending.disable();
+      channel2PendingFlashComplete.disable();
+      channel2LampPin = HIGH;
+      break;
+    case 2:
+      channel3Pending.disable();
+      channel3PendingFlashComplete.disable();
+      channel3LampPin = HIGH;
+      break;
+    case 3:
+      channel4Pending.disable();
+      channel4PendingFlashComplete.disable();
+      channel4LampPin = HIGH;
+      break;
+  }
+}
+
 /** Queue a channel for playback 
- *  @param: channel - the channel initiating the statee change 
+ *  @param: channel - the channel initiating the state change 
  *  @param: midiInterface - the midi interface pointer for the channel
  */
 void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
-  midiInterface.sendRealTime(midi::Start);
   channelCountIn[channel] = countIn;
   if(playHead + countIn > 63) {
     channelBars[channel] = playHead + countIn - 64;    
@@ -467,18 +499,10 @@ void countInDownDebounceCallback() {
 void stopAllButtonInteractionCallback() {
   if (stopPin == LOW && performanceStarted == 1) {
     midiClock.disable();
-    channel1Pending.disable();
-    channel1PendingFlashComplete.disable();
-    channel1LampPin = LOW;
-    channel2Pending.disable();
-    channel2PendingFlashComplete.disable();
-    channel2LampPin = LOW;
-    channel3Pending.disable();
-    channel3PendingFlashComplete.disable();
-    channel3LampPin = LOW;
-    channel4Pending.disable();
-    channel4PendingFlashComplete.disable();
-    channel4LampPin = LOW;
+    stopChannel(0, midi1);
+    stopChannel(1, midi2);
+    stopChannel(2, midi3);
+    stopChannel(3, midi4);
     comfortDownbeat.restart();  
     performanceStarted = 0;
     for(int i = 0; i < channelCountInLength; i++) {
@@ -513,14 +537,10 @@ void playAllButtonInteractionCallback() {
     clocks = 1;
     quarterNotes = 1;
 
-    midi1.sendRealTime(midi::Start);
-    channel1LampPin = HIGH;
-    midi2.sendRealTime(midi::Start);
-    channel2LampPin = HIGH;
-    midi3.sendRealTime(midi::Start);
-    channel3LampPin = HIGH;
-    midi4.sendRealTime(midi::Start);
-    channel4LampPin = HIGH;
+    playChannel(0, midi1);
+    playChannel(1, midi2);
+    playChannel(2, midi3);
+    playChannel(3, midi4);
     
     for(int i = 0; i < channelCountInLength; i++) {
       channelCountIn[i] = 0;
@@ -583,24 +603,16 @@ void midiClockCallback() {
           if(channelCountIn[i] == 0) {
             switch(i){
               case 0:
-                channel1Pending.disable();
-                channel1PendingFlashComplete.disable();
-                channel1LampPin = HIGH;
+                playChannel(0, midi1);
                 break;
               case 1:
-                channel2Pending.disable();
-                channel2PendingFlashComplete.disable();
-                channel2LampPin = HIGH;
+                playChannel(1, midi2);
                 break;
               case 2:
-                channel3Pending.disable();
-                channel3PendingFlashComplete.disable();
-                channel3LampPin = HIGH;
+                playChannel(2, midi3);
                 break;
               case 3:
-                channel4Pending.disable();
-                channel4PendingFlashComplete.disable();
-                channel4LampPin = HIGH;
+                playChannel(3, midi4);
                 break;
             }
           }

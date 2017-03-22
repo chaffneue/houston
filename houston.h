@@ -104,6 +104,7 @@ SOFTWARE. */
   void dequeueChannel(int channel);
   void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
   void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
+  void playChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface); 
   void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
   void channel1InteractionCallback();
   void channel1InteractionDebounceCallback();
