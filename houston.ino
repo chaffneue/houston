@@ -21,8 +21,15 @@ Change Log
   - Adding fractional tempos to one decimal place
   - Making stop and start behaviour more consistent through the app
   - Adding a song pointer reset to ensure patterns start from the beginning
-  - Moving midi start to immediatly before the ticks while enqueued so the gear doesn't time out
-  
+  - Moving midi start to immediately before the ticks while enqueued so the gear doesn't time out
+
+2.0.0 - April 9, 2017
+  - Hardware refresh based on findings over the year
+  - New UI layout with new visualization features, tap functionality and an extra channel over USB.
+  - Single Board, Hand-solderable SMD layout with an off the shelf oled display
+  - Schematics and PCB layout moved to Altium Circuit Maker because of board size constraints with Eagle.
+  - Link to hardware: https://workspace.circuitmaker.com/Projects/Details/Chaffneue-Industries/Houston  
+   
 License
 ---
 
@@ -56,30 +63,25 @@ SOFTWARE. */
 #include <midi_Namespace.h>
 #include <midi_Settings.h>
 
-#include <Tlc5940.h>
-#include <tlc_config.h>
-
 #define _TASK_MICRO_RES
 #include <TaskScheduler.h>
 
-#include <LiquidCrystal.h>
+#include <AltSoftSerial.h>
+AltSoftSerial altSerial;
+
+#include "oled.h"
+OLED oled = OLED();
 
 #include "Houston.h"
 
-// Task implementation 
 Task midiClock(midiClockTime, -1, &midiClockCallback, &scheduler);
-Task updateMatrix(MATRIX_ROW_UPDATE_INTERVAL, -1, &updateMatrixCallback, &scheduler, true);
 
-Task tempoUpInteraction(POLL_TIME_TEMPO, -1, &tempoUpInteractionCallback, &scheduler, true);
-Task tempoDownInteraction(POLL_TIME_TEMPO, -1, &tempoDownInteractionCallback, &scheduler, true);
-Task countInUpInteraction(POLL_TIME_COUNT_IN, -1, &countInUpInteractionCallback, &scheduler, true);
-Task countInDownInteraction(POLL_TIME_COUNT_IN, -1, &countInDownInteractionCallback, &scheduler, true);
-Task countInUpDebounce(POLL_TIME_COUNT_IN, -1, &countInUpDebounceCallback, &scheduler);
-Task countInDownDebounce(POLL_TIME_COUNT_IN, -1, &countInDownDebounceCallback, &scheduler);
 Task comfortDownbeat(quarterNoteTime, -1, &comfortDownbeatCallback, &scheduler, true);
 Task downbeatFlashComplete(DOWNBEAT_LAMP_FLASH_OFF, 2, &downbeatFlashCompleteCallback, &scheduler);
+
 Task stopAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionCallback, &scheduler, true);
 Task stopAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &stopAllButtonInteractionDebounceCallback, &scheduler);
+
 Task playAllButtonInteraction(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionCallback, &scheduler, true);
 Task playAllButtonInteractionDebounce(POLL_TIME_TRANSPORT, -1, &playAllButtonInteractionDebounceCallback, &scheduler);
 
@@ -103,6 +105,56 @@ Task channel4InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel4InteractionDe
 Task channel4Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel4PendingCallback, &scheduler);
 Task channel4PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel4PendingFlashCompleteCallback, &scheduler);
 
+Task channel5Interaction(POLL_TIME_TRANSPORT, -1, &channel5InteractionCallback, &scheduler, true);
+Task channel5InteractionDebounce(POLL_TIME_TRANSPORT, -1, &channel5InteractionDebounceCallback, &scheduler);
+Task channel5Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel5PendingCallback, &scheduler);
+Task channel5PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel5PendingFlashCompleteCallback, &scheduler);
+
+Task encoderDebounce(ENCODER_DEBOUNCE_TIME, 2, &encoderDebounceCallback, &scheduler, true);
+Task tapDebounce(ENCODER_DEBOUNCE_TIME, 2, &tapDebounceCallback, &scheduler, true);
+
+Task printSomething(1000, -1, &printSomethingCallback, &scheduler, true);
+Task changeRects(20000, -1, &changeRectsCallback, &scheduler, true);
+
+void changeRectsCallback() {
+  /**
+  switch(changerectct) {
+    case 0:
+      //Master Slave Mode
+      oled.drawRect(10, 10, 42, 8);
+      changeRects.setInterval(25000);
+      break;
+    case 1:
+      //Beat counter
+      oled.drawRect(11, 58, 28, 6);
+      changeRects.setInterval(12000);
+      break;
+    case 2:
+      //Tempo
+      oled.drawRect(25, 10, 56, 16);
+      changeRects.setInterval(60000);
+      break;
+    case 3:
+      //Bar
+      oled.drawRect(54, 50, 36, 8);
+      changeRects.setInterval(22000);
+      break;
+    case 4:
+      //Latency
+      oled.drawRect(78, 10, 76, 8);
+      changeRects.setInterval(22000);
+      break;
+    default: 
+      changerectct=0;
+  }
+  changerectct = random(0, 10);
+  **/
+}
+
+void printSomethingCallback() {
+  oled.raster();
+}
+
 /** Remove a MIDI channel from the queued state
  * @param: channel - the channel to dequeue
  */
@@ -113,23 +165,28 @@ void dequeueChannel(int channel) {
     case 0:
       channel1Pending.disable();
       channel1PendingFlashComplete.disable();
-      channel1LampPin = LOW;
+      analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
       break;
     case 1:
       channel2Pending.disable();
       channel2PendingFlashComplete.disable();
-      channel2LampPin = LOW;
+      analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
       break;
     case 2:
       channel3Pending.disable();
       channel3PendingFlashComplete.disable();
-      channel3LampPin = LOW;
+      analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
       break;
     case 3:
       channel4Pending.disable();
       channel4PendingFlashComplete.disable();
-      channel4LampPin = LOW;
+      analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
       break;
+    case 4:
+      channel5Pending.disable();
+      channel5PendingFlashComplete.disable();
+      analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
+      break;    
   } 
 }
 
@@ -141,7 +198,17 @@ void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInte
   performanceStarted = 1;
   playChannel(channel, midiInterface);
   comfortDownbeat.disable();
-  delay(1); //halt program execution so we don't run the chance of confusing the midi device
+  analogWrite(PLAY_ALL_LAMP_PIN, buttonMaxBrightness);
+  analogWrite(STOP_ALL_LAMP_PIN, buttonMinBrightness);
+  channelCountIn[channel] = 0;
+  midiClock.restart();
+}
+void startPerformance(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
+  performanceStarted = 1;
+  playChannel(channel, midiInterface);
+  comfortDownbeat.disable();
+  analogWrite(PLAY_ALL_LAMP_PIN, buttonMaxBrightness);
+  analogWrite(STOP_ALL_LAMP_PIN, buttonMinBrightness);
   channelCountIn[channel] = 0;
   midiClock.restart();
 }
@@ -158,26 +225,62 @@ void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface
     case 0:
       channel1Pending.disable();
       channel1PendingFlashComplete.disable();
-      channel1LampPin = LOW;
+      analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
       break;
     case 1:
       channel2Pending.disable();
       channel2PendingFlashComplete.disable();
-      channel2LampPin = LOW;
+      analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
       break;
     case 2:
       channel3Pending.disable();
       channel3PendingFlashComplete.disable();
-      channel3LampPin = LOW;
+      analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
       break;
     case 3:
       channel4Pending.disable();
       channel4PendingFlashComplete.disable();
-      channel4LampPin = LOW;
+      analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
+      break;
+    case 4:
+      channel5Pending.disable();
+      channel5PendingFlashComplete.disable();
+      analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
       break;
   }  
 }
-
+void stopChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
+  midiInterface.sendRealTime(midi::Stop);
+  channelCountIn[channel] = -1;
+  channelBars[channel] = -1;
+  switch(channel) {
+    case 0:
+      channel1Pending.disable();
+      channel1PendingFlashComplete.disable();
+      analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
+      break;
+    case 1:
+      channel2Pending.disable();
+      channel2PendingFlashComplete.disable();
+      analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
+      break;
+    case 2:
+      channel3Pending.disable();
+      channel3PendingFlashComplete.disable();
+      analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
+      break;
+    case 3:
+      channel4Pending.disable();
+      channel4PendingFlashComplete.disable();
+      analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
+      break;
+    case 4:
+      channel5Pending.disable();
+      channel5PendingFlashComplete.disable();
+      analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
+      break;
+  }  
+}
 /** Start playback for a channel
  *  @param: channel - the channel initiating the state change 
  *  @param: midiInterface - the midi interface pointer for the channel
@@ -190,22 +293,59 @@ void playChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface
     case 0:
       channel1Pending.disable();
       channel1PendingFlashComplete.disable();
-      channel1LampPin = HIGH;
+      analogWrite(CHANNEL_1_LAMP_PIN, buttonMaxBrightness);
       break;
     case 1:
       channel2Pending.disable();
       channel2PendingFlashComplete.disable();
-      channel2LampPin = HIGH;
+      analogWrite(CHANNEL_2_LAMP_PIN, buttonMaxBrightness);
       break;
     case 2:
       channel3Pending.disable();
       channel3PendingFlashComplete.disable();
-      channel3LampPin = HIGH;
+      analogWrite(CHANNEL_3_LAMP_PIN, buttonMaxBrightness);
       break;
     case 3:
       channel4Pending.disable();
       channel4PendingFlashComplete.disable();
-      channel4LampPin = HIGH;
+      analogWrite(CHANNEL_4_LAMP_PIN, buttonMaxBrightness);
+      break;
+    case 4:
+      channel5Pending.disable();
+      channel5PendingFlashComplete.disable();
+      analogWrite(CHANNEL_5_LAMP_PIN, buttonMaxBrightness);
+      break;
+  }
+}
+void playChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
+  midiInterface.sendSongPosition(0);
+  midiInterface.sendRealTime(midi::Start);
+
+  switch(channel) {
+    case 0:
+      channel1Pending.disable();
+      channel1PendingFlashComplete.disable();
+      analogWrite(CHANNEL_1_LAMP_PIN, buttonMaxBrightness);
+      break;
+    case 1:
+      channel2Pending.disable();
+      channel2PendingFlashComplete.disable();
+      analogWrite(CHANNEL_2_LAMP_PIN, buttonMaxBrightness);
+      break;
+    case 2:
+      channel3Pending.disable();
+      channel3PendingFlashComplete.disable();
+      analogWrite(CHANNEL_3_LAMP_PIN, buttonMaxBrightness);
+      break;
+    case 3:
+      channel4Pending.disable();
+      channel4PendingFlashComplete.disable();
+      analogWrite(CHANNEL_4_LAMP_PIN, buttonMaxBrightness);
+      break;
+    case 4:
+      channel5Pending.disable();
+      channel5PendingFlashComplete.disable();
+      analogWrite(CHANNEL_5_LAMP_PIN, buttonMaxBrightness);
       break;
   }
 }
@@ -235,6 +375,76 @@ void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterf
     case 3:
       channel4Pending.restart();
       break;
+    case 4:
+      channel5Pending.restart();
+      break;
+  }
+}
+void enqueueChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
+  channelCountIn[channel] = countIn;
+  if(playHead + countIn > 63) {
+    channelBars[channel] = playHead + countIn - 64;    
+  } else {
+    channelBars[channel] = playHead + countIn;
+  }
+    
+  switch(channel) {
+    case 0:
+      channel1Pending.restart();
+      break;
+    case 1:
+      channel2Pending.restart();
+      break;
+    case 2:
+      channel3Pending.restart();
+      break;
+    case 3:
+      channel4Pending.restart();
+      break;
+    case 4:
+      channel5Pending.restart();
+      break;
+  }
+}
+
+/** Set a listener for the encoder
+ */
+void handleEncoder() {
+  if (encoderClkPin == LOW) {
+    detachInterrupt(encInterruptPin);
+    
+    if (encoderDtPin == LOW) {
+      tempo++;
+    } else {
+      tempo--;
+    }
+   
+    updateTempo();
+    encoderDebounce.restart();
+  }
+}
+
+/** Set a listener for tapping
+ */
+void handleTap() {
+  detachInterrupt(tapInterruptPin);
+  tapDebounce.restart();
+}
+
+
+/** Debounce the tap button
+ */
+void tapDebounceCallback() {
+  if (!tapDebounce.isFirstIteration()) {
+    attachInterrupt(tapInterruptPin, handleTap, FALLING);
+  }
+}
+
+/** Debounce the encoder
+ */
+void encoderDebounceCallback() {
+  if (!encoderDebounce.isFirstIteration()) {
+    attachInterrupt(encInterruptPin, handleEncoder, FALLING);
   }
 }
 
@@ -269,7 +479,7 @@ void channel1InteractionDebounceCallback() {
 /** Flash the channel's LED to indicate it is queued for playback
  */
 void channel1PendingCallback() {
-  channel1LampPin = HIGH;
+  analogWrite(CHANNEL_1_LAMP_PIN, buttonMaxBrightness);
   channel1PendingFlashComplete.restart();
 }
 
@@ -277,7 +487,7 @@ void channel1PendingCallback() {
  */
 void channel1PendingFlashCompleteCallback() {
   if(!channel1PendingFlashComplete.isFirstIteration()) {
-    channel1LampPin = LOW;
+    analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
   }
 }
 
@@ -312,7 +522,7 @@ void channel2InteractionDebounceCallback() {
 /** Flash the channel's LED to indicate it is queued for playback
  */
 void channel2PendingCallback() {
-  channel2LampPin = HIGH;
+  analogWrite(CHANNEL_2_LAMP_PIN, buttonMaxBrightness);
   channel2PendingFlashComplete.restart();
 }
 
@@ -320,7 +530,7 @@ void channel2PendingCallback() {
  */
 void channel2PendingFlashCompleteCallback() {
   if(!channel2PendingFlashComplete.isFirstIteration()) {
-    channel2LampPin = LOW;
+    analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
   }
 }
 
@@ -355,7 +565,7 @@ void channel3InteractionDebounceCallback() {
 /** Flash the channel's LED to indicate it is queued for playback
  */
 void channel3PendingCallback() {
-  channel3LampPin = HIGH;
+  analogWrite(CHANNEL_3_LAMP_PIN, buttonMaxBrightness);
   channel3PendingFlashComplete.restart();
 }
 
@@ -363,7 +573,7 @@ void channel3PendingCallback() {
  */
 void channel3PendingFlashCompleteCallback() {
   if(!channel3PendingFlashComplete.isFirstIteration()) {
-    channel3LampPin = LOW;
+    analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
   }
 }
 
@@ -398,7 +608,7 @@ void channel4InteractionDebounceCallback() {
 /** Flash the channel's LED to indicate it is queued for playback
  */
 void channel4PendingCallback() {
-  channel4LampPin = HIGH;
+  analogWrite(CHANNEL_4_LAMP_PIN, buttonMaxBrightness);
   channel4PendingFlashComplete.restart();
 }
 
@@ -406,7 +616,50 @@ void channel4PendingCallback() {
  */
 void channel4PendingFlashCompleteCallback() {
   if(!channel4PendingFlashComplete.isFirstIteration()) {
-    channel4LampPin = LOW;
+    analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
+  }
+}
+
+/** Scan the buttons assigned to the channel for state changes
+ */
+void channel5InteractionCallback() {
+  if(channel5ButtonPin == LOW) {
+    if (performanceStarted == 0) {
+      startPerformance(4, midi5);
+    } else if ( performanceStarted == 1 && channelCountIn[4] == 0) {
+      stopChannel(4, midi5);
+    } else if ( performanceStarted == 1 && channelCountIn[4] > 0) {
+      dequeueChannel(4);
+    } else if ( performanceStarted == 1 && channelCountIn[4] == -1) {
+      enqueueChannel(4, midi5);
+    }
+    
+    channel5InteractionDebounce.restart();
+    channel5Interaction.disable();  
+  }
+}
+
+/** Debounce the channel interaction until the button returns to a high value
+ */
+void channel5InteractionDebounceCallback() {
+  if(channel5ButtonPin == HIGH) {
+     channel5Interaction.restart();
+     channel5InteractionDebounce.disable();
+  }
+}
+
+/** Flash the channel's LED to indicate it is queued for playback
+ */
+void channel5PendingCallback() {
+  analogWrite(CHANNEL_5_LAMP_PIN, buttonMaxBrightness);
+  channel5PendingFlashComplete.restart();
+}
+
+/** Complete the flash by pulling the channel indicator low again  
+ */
+void channel5PendingFlashCompleteCallback() {
+  if(!channel5PendingFlashComplete.isFirstIteration()) {
+    analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
   }
 }
 
@@ -422,8 +675,6 @@ void comfortDownbeatCallback() {
 void downbeatFlashCompleteCallback() {
   if(!downbeatFlashComplete.isFirstIteration()) {
     tempoRedPin = LOW;
-    tempoGreenPin =  LOW;
-    tempoBluePin = LOW;
   }
 }
 
@@ -432,66 +683,8 @@ void downbeatFlashCompleteCallback() {
 void updateTempo() {
   quarterNoteTime = calulateQuarterNoteTime(tempo);
   midiClockTime = calulateMidiClockTime(quarterNoteTime);
+  oled.setTempo(tempo);
   comfortDownbeat.setInterval(quarterNoteTime);
-  printTempo();
-}
-
-/** Poll for the tempo up button 
- */
-void tempoUpInteractionCallback() {
-  if (tempoUpPin == LOW && tempo < 300) { 
-    tempo = tempo + 0.1;
-    updateTempo();
-  }  
-}
-
-/** Poll for the tempo down button 
- */
-void tempoDownInteractionCallback() {
-  if (tempoDownPin == LOW && tempo > 30) {
-    tempo = tempo - 0.1;
-    updateTempo();
-  }
-}
-
-/** Poll for the "count in" up button  
- */
-void countInUpInteractionCallback() {
-  if (countInUpPin == LOW && countIn < 64 ) {
-    countIn++;
-    printCountIn();
-    countInUpDebounce.enable();
-    countInUpInteraction.disable();
-  }  
-}
-
-/** Poll for the "count in" down button
- */
-void countInDownInteractionCallback() {
-  if (countInDownPin == LOW && countIn > 1) {
-    countIn--;
-    printCountIn();
-    countInDownDebounce.enable();
-    countInDownInteraction.disable();
-  }
-}
-
-/** debounce the count in button by waiting until the pin is high again
- */
-void countInUpDebounceCallback() {
-  if(countInUpPin == HIGH) {
-     countInUpInteraction.restart();
-     countInUpDebounce.disable();
-  }
-}
-
-/** debounce the count in button by waiting until the pin is high again
- */
-void countInDownDebounceCallback() {
-  if(countInDownPin == HIGH) {
-     countInDownInteraction.restart();
-     countInDownDebounce.disable();
-  }
 }
 
 /** Poll for the "stop all channels" button
@@ -499,10 +692,13 @@ void countInDownDebounceCallback() {
 void stopAllButtonInteractionCallback() {
   if (stopPin == LOW && performanceStarted == 1) {
     midiClock.disable();
+    analogWrite(PLAY_ALL_LAMP_PIN, buttonMinBrightness);
+    analogWrite(STOP_ALL_LAMP_PIN, buttonMaxBrightness);
     stopChannel(0, midi1);
     stopChannel(1, midi2);
     stopChannel(2, midi3);
     stopChannel(3, midi4);
+    stopChannel(4, midi5);
     comfortDownbeat.restart();  
     performanceStarted = 0;
     for(int i = 0; i < channelCountInLength; i++) {
@@ -531,6 +727,8 @@ void stopAllButtonInteractionDebounceCallback() {
 void playAllButtonInteractionCallback() {
   if (playPin == LOW && performanceStarted == 0) {
     comfortDownbeat.disable();
+    analogWrite(PLAY_ALL_LAMP_PIN, buttonMaxBrightness);
+    analogWrite(STOP_ALL_LAMP_PIN, buttonMinBrightness);
     
     performanceStarted = 1;
     playHead = 0;
@@ -541,6 +739,7 @@ void playAllButtonInteractionCallback() {
     playChannel(1, midi2);
     playChannel(2, midi3);
     playChannel(3, midi4);
+    playChannel(4, midi5);
     
     for(int i = 0; i < channelCountInLength; i++) {
       channelCountIn[i] = 0;
@@ -581,11 +780,14 @@ void midiClockCallback() {
     channelBars[3] = -1;
     midi4.sendRealTime(midi::Clock);
   }
-  
+  if(channelCountIn[4] == 0) {
+    channelBars[4] = -1;
+    midi5.sendRealTime(midi::Clock);
+  } 
   if(clocks % 24 == 1) {
+    tempoRedPin = HIGH;
+    
     if(clocks == 1 || quarterNotes > 4) {
-      tempoGreenPin = HIGH;
-
       quarterNotes = 1;
 
       if(clocks > 24) {
@@ -614,12 +816,13 @@ void midiClockCallback() {
               case 3:
                 playChannel(3, midi4);
                 break;
+              case 4:
+                playChannel(4, midi5);
+                break; 
             }
           }
         }
       }
-    } else {
-      tempoBluePin = HIGH;
     }
     
     downbeatFlashComplete.restart();
@@ -629,47 +832,14 @@ void midiClockCallback() {
   clocks++;
 }
 
-/** Update the 8x8 RGB matrix display to give feedback about queued channels and the playhead location
- */
-void updateMatrixCallback() {
-  Tlc.clear();
-  
-  for (matrixColumn = 0; matrixColumn < 8; matrixColumn++) {
-    currentGridLocation = matrixRow * 8 + matrixColumn;
-    
-    if(channelBars[0] != -1 && channelBars[0] == currentGridLocation) {
-      setColor(red, matrixColumn);
-    } else if (channelBars[1] != -1 && channelBars[1] == currentGridLocation) {
-      setColor(green, matrixColumn);
-    } else if (channelBars[2] != -1 && channelBars[2] == currentGridLocation) {
-      setColor(yellow, matrixColumn);
-    } else if (channelBars[3] != -1 && channelBars[3] == currentGridLocation) {
-      setColor(purple, matrixColumn);
-    } else if (currentGridLocation == playHead) {
-      setColor(white, matrixColumn);
-    } else if (matrixColumn == 0 || matrixColumn == 4) { 
-      setColor(lightBlue, matrixColumn);
-    } else {
-      setColor(darkBlue, matrixColumn);      
-    }
-  }
-  
-  //column control
-  Tlc.set(rowOutputs[matrixRow], 1000);    
-  Tlc.update();
-  
-  if(matrixRow > 6) {
-    matrixRow = 0;
-  } else {
-    matrixRow++;
-  }
-}
-
 void setup() {
   setupPinIo();
-  initLcd();
   initMidi();
-  initMatrix();
+  oled.begin();
+  oled.drawRect(0, 0, 96, 96);
+  oled.initialize();
+  oled.setTempo(tempo);
+  oled.drawRect(25, 10, 56, 16);
   scheduler.startNow();
 }
 
