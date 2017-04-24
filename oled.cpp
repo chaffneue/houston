@@ -4,23 +4,24 @@ extern "C" {
   #include "Twi.h"
 }
 
-
-
-//int rasterStartByte = 0
-//int rasterEndByte = 2288
-//int 
-unsigned char grayH= 0xF0;
-unsigned char grayL= 0x0F;
+// Initialize the viewport rectangles and common interators 
+int tempoViewport[tempoViewportLength];
+int latencyViewport[latencyViewportLength];
+int currentIndex, row, column;
     
 /** Initializer
  */
 void OLED::begin() {
+  const unsigned char blankingData[17] = {DATA_MODE, 0x00,0x00,0x00,0x00,0x00,0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  const unsigned char dividerData[17] = {DATA_MODE, 0x66,0x66,0x66,0x66,0x66,0x66, 0x66, 0x66,0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66};
+  int i=0;
+  
   //Initialize the I2C interface
   twi_init();
-  twi_setFrequency(I2C_FREQUENCY);
   twi_setAddress(DISPLAY_ADDRESS);
- 
+
   //Initialize the SSD1327
+  delay(100);
   sendCommand(0xFD); // Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
   sendCommand(0x12);
   sendCommand(0xAE); // Set display off
@@ -60,9 +61,27 @@ void OLED::begin() {
   sendCommand(0X62); // (0x62);
   sendCommand(0xA4); // Set Normal Display Mode
   sendCommand(0x2E); // Deactivate Scroll
-    delay(100);
+  delay(100);
   sendCommand(0xA0); // remap to horizontal mode
   sendCommand(0x42);
+
+  // Zero out all the pixels
+  for(i=0; i < 288; i++) {        
+      twi_writeTo(DISPLAY_ADDRESS, blankingData, 17, 0, 0);  
+      delayMicroseconds(300);
+  }
+  
+  sendCommand(0xAF); // Switch on display
+
+  delay(1);
+
+  // Draw the divider
+  drawRect(46, 10, 76, 1);
+  for(i=0; i < 3; i++) {        
+      twi_writeTo(DISPLAY_ADDRESS, dividerData, 17, 0, 0);  
+      delayMicroseconds(300);
+  }
+  
 }
 
 /** Send a command to the display
@@ -72,15 +91,6 @@ void OLED::sendCommand(unsigned char command) {
   
   twi_writeTo(DISPLAY_ADDRESS, commandBuffer, 2, 0, 0);
 
-}
-
-/**
- * Send data to the display 
- */
-void OLED::sendData(unsigned char data) {
-  unsigned char dataBuffer[] = {DATA_MODE, random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255), random(0,255)};
-
-  twi_writeTo(DISPLAY_ADDRESS, dataBuffer, 16, 0, 0);
 }
 
 /** Draw the dirty rectangle to update
@@ -93,106 +103,53 @@ void OLED::sendData(unsigned char data) {
 void OLED::drawRect(unsigned int top, unsigned int left, unsigned int width, unsigned int height) {
   // Row Address
   sendCommand(SET_ROW); // Set Row Address - 1 pixel per row 
-  sendCommand(ROW_OFFSET + top); // Start 
-  sendCommand(ROW_OFFSET + top + height - 1); // End 
+  sendCommand(DRIVER_ROW_OFFSET + top); // Start 
+  sendCommand(DRIVER_ROW_OFFSET + top + height - 1); // End
    
   // Column Address
   sendCommand(SET_COLUMN); // Set Column Address - Each Column has 2 pixels(segments) and a 16 pixel column offset
-  sendCommand(COLUMN_OFFSET + (left/2)); // Start 
-  sendCommand(COLUMN_OFFSET + ((left + width)/2) - 1); // End
+  sendCommand(DRIVER_COLUMN_OFFSET + (left/2)); // Start 
+  sendCommand(DRIVER_COLUMN_OFFSET + ((left + width)/2) - 1); // End
 }
 
-int currentIndex = 0;
-int rectTop = 25;
-int rectLeft = 10;
-int rectWidth = 56;
-int rectHeight = 16;
-int bufferSize = 16;
-
-int viewport[448];
-
-/**
- * Initialize the OLED with Houston's dashboard
+/** Write the pixel map for the larger tempo font
+ *  @param: tempoViewportOffset - the offest in pixels/2 to draw the font
+ *  @param: tempoFontOffset - the location to copy from in the font map in pixels/2
+ *  @param: characterWidth - the width of character in pixels/2 to copy from the font's pixel map
  */
-void OLED::initialize() {
-  int i, j;
-  const unsigned char dataBuffer[17] = {DATA_MODE, 0x00,0x00,0x00,0x00,0x00,0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  
-  for(i=0; i < 1000; i++) {        
-      twi_writeTo(DISPLAY_ADDRESS, dataBuffer, 17, 0, 0);  
-      delayMicroseconds(200);
-  }
-
-  sendCommand(0xAF); // Switch on display
-}
-
-void OLED::pushToTempoBitmap(int number, int numberPosition){
-    int row, column;
-    int font_width = 62;
-    int character_width = 6;
-    int viewport_width = 28;
-    int viewport_height = 16;
-    int viewport_offset = number * character_width;
-    int tempo_char_offset = (numberPosition * character_width);
-    if (numberPosition == 3) {
-      tempo_char_offset  = tempo_char_offset + 4;
-    }
-
-    for(row = 0; row < viewport_height; row++) {
-     for(column = 0; column < character_width; column++) {
-       viewport[(row*viewport_width)+column+tempo_char_offset] = tempoFont[(row*font_width)+column+viewport_offset];
+void OLED::pushToTempoBitmap(int tempoViewportOffset, int tempoFontOffset, int characterWidth){
+    for(row = 0; row < tempoViewportHeight; row++) {
+     for(column = 0; column < characterWidth; column++) {
+       tempoViewport[(row * tempoViewportWidth)+ column + tempoViewportOffset] = tempoFont[(row * tempoFontWidth) + column + tempoFontOffset];
      }
    }  
 }
 
-void OLED::pushToTempoBitmap(){
-    int row, column;
-    int font_width = 62;
-    int character_width = 2;
-    int viewport_width = 28;
-    int viewport_height = 16;
-    int viewport_offset = 60;
-    int tempo_char_offset = 19;
-
-    for(row = 0; row < viewport_height; row++) {
-     for(column = 0; column < character_width; column++) {
-       viewport[(row*viewport_width)+column+tempo_char_offset] = tempoFont[(row*font_width)+column+viewport_offset];
-     }
-   }  
-}
-
-void OLED::pushToTempoBitmap(char none[]){
-    int row, column;
-    int font_width = 62;
-    int character_width = 2;
-    int viewport_width = 28;
-    int viewport_height = 16;
-    int viewport_offset = 60;
-    int tempo_char_offset = 19;
-
-    for(row = 0; row < viewport_height; row++) {
-     for(column = 0; column < character_width; column++) {
-       viewport[(row*viewport_width)+column+tempo_char_offset] = 0x00;
-     }
-   }  
-}
-
-
-
+/** Extract the digits from the tempo value and update the tempo bitmap
+ *  The text should always be left justified
+ *  @param: tempo - the tempo float value eg 120.0 
+ */
 void OLED::setTempo(double tempo) {
   int integralTempo = floor((tempo*10));
-  
-  pushToTempoBitmap(integralTempo % 10, 3);
-  integralTempo /= 10;
-  pushToTempoBitmap(integralTempo % 10, 2);
-  integralTempo /= 10;
-  pushToTempoBitmap(integralTempo % 10, 1);
-  integralTempo /= 10;
-  pushToTempoBitmap();
   if(tempo >= 100) {
-    pushToTempoBitmap(integralTempo % 10, 0);
+    pushToTempoBitmap(22, getTempoCharOffset(integralTempo), 6); //fractional
+    pushToTempoBitmap(18, 60, 4); // clear decimal point location
+    pushToTempoBitmap(19, 66, 2); // add decimal point
+    integralTempo /= 10;
+    pushToTempoBitmap(12, getTempoCharOffset(integralTempo), 6); //ones
+    integralTempo /= 10;
+    pushToTempoBitmap(6, getTempoCharOffset(integralTempo), 6); //tens
+    integralTempo /= 10;
+    pushToTempoBitmap(0, getTempoCharOffset(integralTempo), 6); //hundreds
   } else {
-    pushToTempoBitmap("none", 0);
+    pushToTempoBitmap(22, 60, 6); //clear the pixels to the right
+    pushToTempoBitmap(16, getTempoCharOffset(integralTempo), 6); //fractional
+    pushToTempoBitmap(12, 60, 4); // clear decimal point location
+    pushToTempoBitmap(13, 66, 2); // add decimal point
+    integralTempo /= 10;
+    pushToTempoBitmap(6, getTempoCharOffset(integralTempo), 6); //ones
+    integralTempo /= 10;
+    pushToTempoBitmap(0, getTempoCharOffset(integralTempo), 6); //tens
   }
 }
 
@@ -207,7 +164,7 @@ void OLED::raster(){
   dataBuffer[0] = DATA_MODE;
   int i;
   for (i = 0; i < 16; i++) {
-     dataBuffer[i+1] = viewport[i+currentIndex];
+     dataBuffer[i+1] = tempoViewport[i+currentIndex];
   }
 
   currentIndex = currentIndex + 16;

@@ -73,7 +73,7 @@ SOFTWARE. */
   #define ENCODER_DEBOUNCE_TIME 15000
   
   //startup settings
-  #define DEFAULT_TEMPO 135.0
+  #define DEFAULT_TEMPO 105.0
   #define DEFAULT_COUNT_IN 1
   #define POLL_TIME_TRANSPORT 15000
   #define DOWNBEAT_LAMP_FLASH_OFF 10000

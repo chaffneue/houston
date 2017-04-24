@@ -836,8 +836,6 @@ void setup() {
   setupPinIo();
   initMidi();
   oled.begin();
-  oled.drawRect(0, 0, 96, 96);
-  oled.initialize();
   oled.setTempo(tempo);
   oled.drawRect(25, 10, 56, 16);
   scheduler.startNow();
