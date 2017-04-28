@@ -70,10 +70,10 @@ SOFTWARE. */
   #define ENCODER_CLK_PIN 2
   #define ENCODER_DT_PIN 4
   #define ENCODER_BUTTON_PIN 5
-  #define ENCODER_DEBOUNCE_TIME 15000
+  #define ENCODER_DEBOUNCE_TIME 30000
   
   //startup settings
-  #define DEFAULT_TEMPO 105.0
+  #define DEFAULT_TEMPO 135.0
   #define DEFAULT_COUNT_IN 1
   #define POLL_TIME_TRANSPORT 15000
   #define DOWNBEAT_LAMP_FLASH_OFF 10000
@@ -132,9 +132,8 @@ SOFTWARE. */
   void playAllButtonInteractionCallback();
   void playAllButtonInteractionDebounceCallback();
   void midiClockCallback();
-  void printSomethingCallback();
-  void changeRectsCallback();
-  int changerectct;
+  void dirtyEventWatcherCallback();
+  void oledRasterCallback();
 
   Input<STOP_ALL_BUTTON_PIN> stopPin;
   Input<PLAY_ALL_BUTTON_PIN> playPin;
@@ -170,6 +169,7 @@ SOFTWARE. */
   int clocks = 1;
   int buttonMaxBrightness = DEFAULT_BUTTON_MAX_BRIGHTNESS;
   int buttonMinBrightness = DEFAULT_BUTTON_MIN_BRIGHTNESS;
+  int lastDirtyRectangle;
   
   unsigned long quarterNoteTime = calulateQuarterNoteTime(tempo);
   unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);

@@ -74,6 +74,8 @@ OLED oled = OLED();
 
 #include "Houston.h"
 
+int tapCount = 0;
+
 Task midiClock(midiClockTime, -1, &midiClockCallback, &scheduler);
 
 Task comfortDownbeat(quarterNoteTime, -1, &comfortDownbeatCallback, &scheduler, true);
@@ -113,46 +115,56 @@ Task channel5PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel5PendingF
 Task encoderDebounce(ENCODER_DEBOUNCE_TIME, 2, &encoderDebounceCallback, &scheduler, true);
 Task tapDebounce(ENCODER_DEBOUNCE_TIME, 2, &tapDebounceCallback, &scheduler, true);
 
-Task printSomething(1000, -1, &printSomethingCallback, &scheduler, true);
-Task changeRects(20000, -1, &changeRectsCallback, &scheduler, true);
+Task dirtyEventWatcher(3000, -1, &dirtyEventWatcherCallback, &scheduler, true);
+Task oledRaster(1000, -1, &oledRasterCallback, &scheduler);
 
-void changeRectsCallback() {
-  /**
-  switch(changerectct) {
-    case 0:
-      //Master Slave Mode
-      oled.drawRect(10, 10, 42, 8);
-      changeRects.setInterval(25000);
-      break;
-    case 1:
-      //Beat counter
-      oled.drawRect(11, 58, 28, 6);
-      changeRects.setInterval(12000);
-      break;
-    case 2:
-      //Tempo
-      oled.drawRect(25, 10, 56, 16);
-      changeRects.setInterval(60000);
-      break;
-    case 3:
-      //Bar
-      oled.drawRect(54, 50, 36, 8);
-      changeRects.setInterval(22000);
-      break;
-    case 4:
-      //Latency
-      oled.drawRect(78, 10, 76, 8);
-      changeRects.setInterval(22000);
-      break;
-    default: 
-      changerectct=0;
+void dirtyEventWatcherCallback() {
+  if(int dirtyId = oled.getDirtyId()){
+    switch(dirtyId){
+      case DIRTY_INT_EXT:
+        if(lastDirtyRectangle != DIRTY_INT_EXT) {
+          oled.drawRect(10, 10, 14, 9);
+          lastDirtyRectangle = DIRTY_INT_EXT;
+        }
+        oled.setRasterViewport(DIRTY_INT_EXT);
+        break;
+      case DIRTY_TAP:
+        if(lastDirtyRectangle != DIRTY_TAP) {
+          oled.drawRect(9, 48, 41, 8);
+          lastDirtyRectangle = DIRTY_TAP;
+        }
+        oled.setRasterViewport(DIRTY_TAP);
+        break;
+     case DIRTY_TEMPO:
+        if(lastDirtyRectangle != DIRTY_TEMPO) {
+          oled.drawRect(22, 10, 56, 16);
+          lastDirtyRectangle = DIRTY_TEMPO;
+        }
+        oled.setRasterViewport(DIRTY_TEMPO);
+        break;
+                /**
+      case DIRTY_BAR_COUNTER:
+        oled.drawRect(51, 72, 60, 7);
+        oled.setRasterViewport(DIRTY_BAR_COUNTER);
+        break;
+
+      case DIRTY_LATENCY:
+        oled.drawRect(78, 10, 76, 8);
+        oled.setRasterViewport(DIRTY_LATENCY);
+        break;
+    }
+    */
+    }
+    dirtyEventWatcher.disable();
+    oledRaster.restart();
   }
-  changerectct = random(0, 10);
-  **/
 }
 
-void printSomethingCallback() {
-  oled.raster();
+void oledRasterCallback() {
+  if(!oled.raster()) {
+    oledRaster.disable();
+    dirtyEventWatcher.restart();
+  }
 }
 
 /** Remove a MIDI channel from the queued state
@@ -427,7 +439,11 @@ void handleEncoder() {
 /** Set a listener for tapping
  */
 void handleTap() {
+  if(tapCount > 4) {
+    tapCount = 0;
+  }
   detachInterrupt(tapInterruptPin);
+  oled.setTapState(tapCount++);
   tapDebounce.restart();
 }
 
@@ -836,8 +852,12 @@ void setup() {
   setupPinIo();
   initMidi();
   oled.begin();
+  oled.setIntExt(0);
+  oled.setTapState(tapCount);
   oled.setTempo(tempo);
-  oled.drawRect(25, 10, 56, 16);
+  oled.setBarCounter(1, 1);
+  //int latency[5];
+  //oled.setLatency(latency);
   scheduler.startNow();
 }
 
