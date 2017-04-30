@@ -74,7 +74,9 @@ OLED oled = OLED();
 
 #include "Houston.h"
 
-int tapCount = 0;
+int tapCount = 1;
+int encoderButtonHoldTime = 0;
+int tempoPrecision = 0;
 
 Task midiClock(midiClockTime, -1, &midiClockCallback, &scheduler);
 
@@ -113,7 +115,10 @@ Task channel5Pending(CHANNEL_PENDING_LAMP_ON, -1, &channel5PendingCallback, &sch
 Task channel5PendingFlashComplete(CHANNEL_PENDING_LAMP_OFF, 2, &channel5PendingFlashCompleteCallback, &scheduler);
 
 Task encoderDebounce(ENCODER_DEBOUNCE_TIME, 2, &encoderDebounceCallback, &scheduler, true);
-Task tapDebounce(ENCODER_DEBOUNCE_TIME, 2, &tapDebounceCallback, &scheduler, true);
+Task encoderButtonInteraction(POLL_TIME_ENCODER_BUTTON, -1, &encoderButtonInteractionCallback, &scheduler, true);
+Task encoderButtonInteractionDebounce(POLL_TIME_ENCODER_BUTTON, -1, &encoderButtonInteractionDebounceCallback, &scheduler);
+Task tapDebounce(TAP_DEBOUNCE_TIME, 2, &tapDebounceCallback, &scheduler, true);
+Task tapReset(TAP_RESET_TIME, 2, &tapResetCallback, &scheduler);
 
 Task dirtyEventWatcher(3000, -1, &dirtyEventWatcherCallback, &scheduler, true);
 Task oledRaster(1000, -1, &oledRasterCallback, &scheduler);
@@ -141,6 +146,13 @@ void dirtyEventWatcherCallback() {
           lastDirtyRectangle = DIRTY_TEMPO;
         }
         oled.setRasterViewport(DIRTY_TEMPO);
+        break;
+    case DIRTY_TEMPO_PRECISION:
+        if(lastDirtyRectangle != DIRTY_TEMPO_PRECISION) {
+          oled.drawRect(43, 10, 64, 1);
+          lastDirtyRectangle = DIRTY_TEMPO_PRECISION;
+        }
+        oled.setRasterViewport(DIRTY_TEMPO_PRECISION);
         break;
                 /**
       case DIRTY_BAR_COUNTER:
@@ -419,6 +431,35 @@ void enqueueChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterfa
   }
 }
 
+/** Capture the encoder click
+ */
+void encoderButtonInteractionCallback() {
+  if(encoderSwPin == LOW) {
+     encoderButtonInteraction.disable();
+     encoderButtonInteractionDebounce.restart();
+  }  
+}
+
+/** Debounce the encoder button for click/setup setup mode
+ */
+void encoderButtonInteractionDebounceCallback() {
+  if(encoderSwPin == HIGH && encoderButtonHoldTime < ENCODER_BUTTON_MIN_HOLD_CYCLES) {
+    //normal click detected
+    encoderButtonHoldTime = 0;
+    tempoPrecision = tempoPrecision ? 0 : 1;
+    oled.setTempoPrecision(tempoPrecision);
+    encoderButtonInteractionDebounce.disable();
+    encoderButtonInteraction.restart();
+  } else if(encoderButtonHoldTime > ENCODER_BUTTON_MIN_HOLD_CYCLES) {
+    //encoder button was held down 
+    encoderButtonHoldTime = 0;
+    encoderButtonInteractionDebounce.disable();
+    encoderButtonInteraction.restart();
+  } else {
+    encoderButtonHoldTime++;
+  }
+}
+
 /** Set a listener for the encoder
  */
 void handleEncoder() {
@@ -426,9 +467,17 @@ void handleEncoder() {
     detachInterrupt(encInterruptPin);
     
     if (encoderDtPin == LOW) {
-      tempo++;
+      if(tempoPrecision == 1){
+        tempo = tempo + 0.1001;
+      } else {
+        tempo = tempo + 1;
+      }
     } else {
-      tempo--;
+      if(tempoPrecision == 1){
+        tempo = tempo - 0.1001;
+      } else {
+        tempo = tempo - 1;
+      }
     }
    
     updateTempo();
@@ -436,15 +485,25 @@ void handleEncoder() {
   }
 }
 
+/** Reset the tap after inactivity
+ */
+void tapResetCallback() {
+  if (!tapReset.isFirstIteration()) {
+    tapCount = 1;
+    oled.setTapState(0);
+  }
+}
+
 /** Set a listener for tapping
  */
 void handleTap() {
-  if(tapCount > 4) {
-    tapCount = 0;
-  }
   detachInterrupt(tapInterruptPin);
+  if(tapCount > 4) {
+    tapCount = 1;
+  }
   oled.setTapState(tapCount++);
   tapDebounce.restart();
+  tapReset.restart();
 }
 
 
@@ -853,9 +912,10 @@ void setup() {
   initMidi();
   oled.begin();
   oled.setIntExt(0);
-  oled.setTapState(tapCount);
+  oled.setTapState(0);
   oled.setTempo(tempo);
-  oled.setBarCounter(1, 1);
+  oled.setTempoPrecision(0);
+  //oled.setBarCounter(1, 1);
   //int latency[5];
   //oled.setLatency(latency);
   scheduler.startNow();

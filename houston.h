@@ -70,7 +70,13 @@ SOFTWARE. */
   #define ENCODER_CLK_PIN 2
   #define ENCODER_DT_PIN 4
   #define ENCODER_BUTTON_PIN 5
-  #define ENCODER_DEBOUNCE_TIME 30000
+  #define ENCODER_DEBOUNCE_TIME 40000
+  #define POLL_TIME_ENCODER_BUTTON 15000
+  #define ENCODER_BUTTON_MIN_HOLD_CYCLES 70
+
+  //Tap Button
+  #define TAP_DEBOUNCE_TIME 300000
+  #define TAP_RESET_TIME 1000000
   
   //startup settings
   #define DEFAULT_TEMPO 135.0
@@ -125,6 +131,8 @@ SOFTWARE. */
   void comfortDownbeatCallback();
   void downbeatFlashCompleteCallback();
   void encoderDebounceCallback();
+  void encoderButtonInteractionCallback();
+  void encoderButtonInteractionDebounceCallback();
   void tapDebounceCallback();
   void updateTempo();
   void stopAllButtonInteractionCallback();
@@ -132,6 +140,7 @@ SOFTWARE. */
   void playAllButtonInteractionCallback();
   void playAllButtonInteractionDebounceCallback();
   void midiClockCallback();
+  void tapResetCallback();
   void dirtyEventWatcherCallback();
   void oledRasterCallback();
 
