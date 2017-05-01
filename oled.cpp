@@ -463,11 +463,11 @@ void OLED::setTempoPrecision(int state) {
       break;
     // Tempo less than 100 - 2 digit precision
     case 2:
-      divLength = 14;
+      divLength = 13;
       break;
     // Tempo less than 100 - 3 digit precision
     case 3:
-      divLength = 22;
+      divLength = 23;
       break;
     // Tempo greater than 100 - 3 digit precision 
     default:

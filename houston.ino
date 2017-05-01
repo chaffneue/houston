@@ -440,6 +440,18 @@ void encoderButtonInteractionCallback() {
   }  
 }
 
+void updateTempoPrecision() {
+  if(tempoPrecision == 0 && tempo > 100) {
+    oled.setTempoPrecision(0);
+  } else if(tempoPrecision == 1 && tempo > 100) {
+    oled.setTempoPrecision(1);
+  } else if(tempoPrecision == 0 && tempo < 100) {
+    oled.setTempoPrecision(2);
+  } else if(tempoPrecision == 1 && tempo < 100) {
+    oled.setTempoPrecision(3);
+  }
+}
+
 /** Debounce the encoder button for click/setup setup mode
  */
 void encoderButtonInteractionDebounceCallback() {
@@ -447,7 +459,7 @@ void encoderButtonInteractionDebounceCallback() {
     //normal click detected
     encoderButtonHoldTime = 0;
     tempoPrecision = tempoPrecision ? 0 : 1;
-    oled.setTempoPrecision(tempoPrecision);
+    updateTempoPrecision();
     encoderButtonInteractionDebounce.disable();
     encoderButtonInteraction.restart();
   } else if(encoderButtonHoldTime > ENCODER_BUTTON_MIN_HOLD_CYCLES) {
@@ -465,22 +477,24 @@ void encoderButtonInteractionDebounceCallback() {
 void handleEncoder() {
   if (encoderClkPin == LOW) {
     detachInterrupt(encInterruptPin);
-    
-    if (encoderDtPin == LOW) {
+
+    // Update the tempo 
+    if (encoderDtPin == LOW && tempo < 300) {
       if(tempoPrecision == 1){
         tempo = tempo + 0.1001;
       } else {
         tempo = tempo + 1;
       }
-    } else {
+    } else if(encoderDtPin == HIGH && tempo > 30)  {
       if(tempoPrecision == 1){
         tempo = tempo - 0.1001;
       } else {
         tempo = tempo - 1;
       }
     }
-   
+
     updateTempo();
+    updateTempoPrecision();
     encoderDebounce.restart();
   }
 }
@@ -914,7 +928,7 @@ void setup() {
   oled.setIntExt(0);
   oled.setTapState(0);
   oled.setTempo(tempo);
-  oled.setTempoPrecision(0);
+  oled.setTempoPrecision(tempoPrecision);
   //oled.setBarCounter(1, 1);
   //int latency[5];
   //oled.setLatency(latency);

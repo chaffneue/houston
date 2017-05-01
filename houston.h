@@ -33,7 +33,6 @@ SOFTWARE. */
   #define Houston_h
   #define calulateQuarterNoteTime(bpm) (floor((1/((float)bpm / 60) * 4000000)/4))
   #define calulateMidiClockTime(quarterNoteTime) (floor(quarterNoteTime/24));
-  
   //channel buttons
   #define CHANNEL_1_BUTTON_PIN 23
   #define CHANNEL_2_BUTTON_PIN 24
