@@ -33,6 +33,7 @@ SOFTWARE. */
   #define Houston_h
   #define calulateQuarterNoteTime(bpm) (floor((1/((float)bpm / 60) * 4000000)/4))
   #define calulateMidiClockTime(quarterNoteTime) (floor(quarterNoteTime/24));
+
   //channel buttons
   #define CHANNEL_1_BUTTON_PIN 23
   #define CHANNEL_2_BUTTON_PIN 24
@@ -75,7 +76,7 @@ SOFTWARE. */
 
   //Tap Button
   #define TAP_DEBOUNCE_TIME 300000
-  #define TAP_RESET_TIME 1000000
+  #define TAP_RESET_TIME 1500000
   
   //startup settings
   #define DEFAULT_TEMPO 135.0
@@ -161,7 +162,7 @@ SOFTWARE. */
   Input<ENCODER_BUTTON_PIN> encoderSwPin;
   Input<TAP_BUTTON_PIN> tapPin;
 
-  double tempo = DEFAULT_TEMPO;
+  volatile double tempo = DEFAULT_TEMPO;
   unsigned int countIn = DEFAULT_COUNT_IN;
 
   int performanceStarted = 0;
@@ -183,8 +184,6 @@ SOFTWARE. */
   unsigned long midiClockTime = calulateMidiClockTime(quarterNoteTime);
   const uint8_t encInterruptPin = digitalPinToInterrupt(ENCODER_CLK_PIN);
   const uint8_t tapInterruptPin = digitalPinToInterrupt(TAP_BUTTON_PIN);
-
-  int s;
 
   /** Register the IO pins 
    */

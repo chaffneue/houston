@@ -74,9 +74,9 @@ OLED oled = OLED();
 
 #include "Houston.h"
 
-int tapCount = 1;
 int encoderButtonHoldTime = 0;
-int tempoPrecision = 0;
+volatile int tempoPrecision = 0;
+volatile int tapCount = 1;
 
 Task midiClock(midiClockTime, -1, &midiClockCallback, &scheduler);
 

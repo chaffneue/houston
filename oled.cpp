@@ -317,15 +317,19 @@ void OLED::sendCommand(unsigned char command) {
  *  @param: height - bottom corner height from the origin in pixels
  */
 void OLED::drawRect(int top, int left, int width, int height) {
-  // Row Address
-  sendCommand(SET_ROW); // Set Row Address - 1 pixel per row 
-  sendCommand(DRIVER_ROW_OFFSET + top); // Start 
-  sendCommand(DRIVER_ROW_OFFSET + top + height - 1); // End
-   
-  // Column Address
-  sendCommand(SET_COLUMN); // Set Column Address - Each Column has 2 pixels(segments) and a 16 pixel column offset
-  sendCommand(DRIVER_COLUMN_OFFSET + (left/2)); // Start 
-  sendCommand(DRIVER_COLUMN_OFFSET + ((left + width)/2) - 1); // End
+  unsigned char commandBuffer[12] = {
+    // Row Address
+    COMMAND_MODE, SET_ROW, // Set Row Address - 1 pixel per row 
+    COMMAND_MODE, DRIVER_ROW_OFFSET + top, // Start 
+    COMMAND_MODE, DRIVER_ROW_OFFSET + top + height - 1, // End
+     
+    // Column Address
+    COMMAND_MODE, SET_COLUMN, // Set Column Address - Each Column has 2 pixels(segments) and a 16 pixel column offset
+    COMMAND_MODE, DRIVER_COLUMN_OFFSET + (left/2), // Start 
+    COMMAND_MODE, DRIVER_COLUMN_OFFSET + ((left + width)/2) - 1 // End
+  };
+
+  twi_writeTo(DISPLAY_ADDRESS, commandBuffer, 12, 0, 0);
 }
 
 /** Mark the data as dirty
