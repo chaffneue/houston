@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Arduino\hardware\tools\avr/bin/avrdude" -CC:"\Program Files (x86)\Arduino\hardware\tools\avr/etc/avrdude.conf" -v -pm32u2 -cusbtiny -B32  -U flash:w:C:\Users\photoslave\Documents\Arduino\libraries\hiduino\compiled_firmwares\arduino_midi.hex -U lfuse:w:0xFF:m -U hfuse:w:0xD9:m -U efuse:w:0xF4:m -U lock:w:0x0F:m

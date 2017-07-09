@@ -49,14 +49,14 @@ SOFTWARE. */
   #define CHANNEL_5_LAMP_PIN 10
   
   //global buttons
-  #define STOP_ALL_BUTTON_PIN 29
-  #define PLAY_ALL_BUTTON_PIN 28
+  #define STOP_ALL_BUTTON_PIN 28
+  #define PLAY_ALL_BUTTON_PIN 29
   #define TAP_BUTTON_PIN 3
 
   //global lamps
   #define TEMPO_LAMP_PIN 30
-  #define PLAY_ALL_LAMP_PIN 12
-  #define STOP_ALL_LAMP_PIN 11
+  #define PLAY_ALL_LAMP_PIN 11
+  #define STOP_ALL_LAMP_PIN 12
 
   //Virtual Serial
   #define VIRTUAL_SERIAL_TX_PIN 46

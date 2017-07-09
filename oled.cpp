@@ -205,50 +205,51 @@ void OLED::begin() {
   twi_setAddress(DISPLAY_ADDRESS);
 
   //Initialize the SSD1327
-  delay(100);
+  delay(1000);
   sendCommand(0xFD); // Unlock OLED driver IC MCU interface from entering command. i.e: Accept commands
   sendCommand(0x12);
   sendCommand(0xAE); // Set display off
-  delay(1);
+  delay(100);
   sendCommand(0xA8); // set multiplex ratio
   sendCommand(0x5F); // 96
   sendCommand(0xA1); // set display start line
-  delay(1);
+  delay(100);
   sendCommand(0x00);
   sendCommand(0xA2); // set display offset
   sendCommand(0x60);
-  delay(1);
+  delay(100);
   sendCommand(0xA0); // set remap
   sendCommand(0x46);
   sendCommand(0xAB); // set vdd internal
-  delay(1);
+  delay(100);
   sendCommand(0x01); //
   sendCommand(0x81); // set contrast
   sendCommand(0x53); // 100 nit
-  delay(1);
+  delay(100);
   sendCommand(0xB1); // Set Phase Length
   sendCommand(0X51); //
   sendCommand(0xB3); // Set Display Clock Divide Ratio/Oscillator Frequency
-  delay(1);
+  delay(100);
   sendCommand(0x01);
   sendCommand(0xB9); //
   sendCommand(0xBC); // set pre_charge voltage/VCOMH
-  delay(1);
+  delay(100);
   sendCommand(0x08); // (0x08);
   sendCommand(0xBE); // set VCOMH
   sendCommand(0X07); // (0x07);
-  delay(1);
+  delay(100);
   sendCommand(0xB6); // Set second pre-charge period
   sendCommand(0x01); //
   sendCommand(0xD5); // enable second precharge and enternal vsl
   sendCommand(0X62); // (0x62);
-  delay(1);
+  delay(100);
   sendCommand(0xA4); // Set Normal Display Mode
   sendCommand(0x2E); // Deactivate Scroll
   delay(100);
   sendCommand(0xA0); // remap to horizontal mode
   sendCommand(0x42);
-
+  delay(100);
+  
   // Zero out all the pixels
   drawRect(0, 0, 96, 96);
   for(i=0; i < 288; i++) { 

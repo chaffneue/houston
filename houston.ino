@@ -310,9 +310,9 @@ void stopChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface)
  *  @param: midiInterface - the midi interface pointer for the channel
  */
 void playChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
-  midiInterface.sendSongPosition(0);
   midiInterface.sendRealTime(midi::Start);
-
+  //midiInterface.sendSongPosition(0);
+  
   switch(channel) {
     case 0:
       channel1Pending.disable();
@@ -481,15 +481,15 @@ void handleEncoder() {
     // Update the tempo 
     if (encoderDtPin == LOW && tempo < 300) {
       if(tempoPrecision == 1){
-        tempo = tempo + 0.1001;
-      } else {
-        tempo = tempo + 1;
-      }
-    } else if(encoderDtPin == HIGH && tempo > 30)  {
-      if(tempoPrecision == 1){
         tempo = tempo - 0.1001;
       } else {
         tempo = tempo - 1;
+      }
+    } else if(encoderDtPin == HIGH && tempo > 30)  {
+      if(tempoPrecision == 1){
+        tempo = tempo + 0.1001;
+      } else {
+        tempo = tempo + 1;
       }
     }
 
@@ -824,19 +824,18 @@ void playAllButtonInteractionCallback() {
     clocks = 1;
     quarterNotes = 1;
 
+    for(int i = 0; i < channelCountInLength; i++) {
+      channelCountIn[i] = 0;
+    }
+
     playChannel(0, midi1);
     playChannel(1, midi2);
     playChannel(2, midi3);
     playChannel(3, midi4);
     playChannel(4, midi5);
     
-    for(int i = 0; i < channelCountInLength; i++) {
-      channelCountIn[i] = 0;
-    }
-    
     playAllButtonInteractionDebounce.restart();
     playAllButtonInteraction.disable();
-    delay(1);
     midiClock.restart();
   }
 }
@@ -853,26 +852,6 @@ void playAllButtonInteractionDebounceCallback() {
 /** The main MIDI loop during playback
  */
 void midiClockCallback() {
-  if(channelCountIn[0] == 0) {
-    channelBars[0] = -1;
-    midi1.sendRealTime(midi::Clock);
-  }
-  if(channelCountIn[1] == 0) {
-    channelBars[1] = -1;
-    midi2.sendRealTime(midi::Clock);
-  }
-  if(channelCountIn[2] == 0) {
-    channelBars[2] = -1;
-    midi3.sendRealTime(midi::Clock);
-  }
-  if(channelCountIn[3] == 0) {
-    channelBars[3] = -1;
-    midi4.sendRealTime(midi::Clock);
-  }
-  if(channelCountIn[4] == 0) {
-    channelBars[4] = -1;
-    midi5.sendRealTime(midi::Clock);
-  } 
   if(clocks % 24 == 1) {
     tempoRedPin = HIGH;
     
@@ -913,11 +892,33 @@ void midiClockCallback() {
         }
       }
     }
-    
+
     downbeatFlashComplete.restart();
     midiClock.setInterval(midiClockTime);
     quarterNotes++;
   }
+
+  if(channelCountIn[0] == 0) {
+    channelBars[0] = -1;
+    midi1.sendRealTime(midi::Clock);
+  }
+  if(channelCountIn[1] == 0) {
+    channelBars[1] = -1;
+    midi2.sendRealTime(midi::Clock);
+  }
+  if(channelCountIn[2] == 0) {
+    channelBars[2] = -1;
+    midi3.sendRealTime(midi::Clock);
+  }
+  if(channelCountIn[3] == 0) {
+    channelBars[3] = -1;
+    midi4.sendRealTime(midi::Clock);
+  }
+  if(channelCountIn[4] == 0) {
+    channelBars[4] = -1;
+    midi5.sendRealTime(midi::Clock);
+  }
+    
   clocks++;
 }
 
