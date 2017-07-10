@@ -184,7 +184,6 @@ void oledRasterCallback() {
  */
 void dequeueChannel(int channel) {
   channelCountIn[channel] = -1;
-  channelBars[channel] = -1;
   switch(channel) {
     case 0:
       channel1Pending.disable();
@@ -218,7 +217,7 @@ void dequeueChannel(int channel) {
  *  @param: channel - the channel initiating the state change 
  *  @param: midiInterface - the midi interface pointer for the channel
  */
-void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
+template <class T> void startPerformance(int channel, T &midiInterface) {
   performanceStarted = 1;
   playChannel(channel, midiInterface);
   comfortDownbeat.disable();
@@ -227,124 +226,52 @@ void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInte
   channelCountIn[channel] = 0;
   midiClock.restart();
 }
-void startPerformance(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
-  performanceStarted = 1;
-  playChannel(channel, midiInterface);
-  comfortDownbeat.disable();
-  analogWrite(PLAY_ALL_LAMP_PIN, buttonMaxBrightness);
-  analogWrite(STOP_ALL_LAMP_PIN, buttonMinBrightness);
-  channelCountIn[channel] = 0;
-  midiClock.restart();
-}
+
 
 /** Stop a single channel
  *  @param: channel - the channel to stop immediately
  *  @param: midiInterface - the midi interface pointer for the channel
  */
-void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
+template <class T> void stopChannel(int channel, T &midiInterface) {
   midiInterface.sendRealTime(midi::Stop);
   channelCountIn[channel] = -1;
-  channelBars[channel] = -1;
-  switch(channel) {
-    case 0:
-      channel1Pending.disable();
-      channel1PendingFlashComplete.disable();
-      analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 1:
-      channel2Pending.disable();
-      channel2PendingFlashComplete.disable();
-      analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 2:
-      channel3Pending.disable();
-      channel3PendingFlashComplete.disable();
-      analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 3:
-      channel4Pending.disable();
-      channel4PendingFlashComplete.disable();
-      analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 4:
-      channel5Pending.disable();
-      channel5PendingFlashComplete.disable();
-      analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
-      break;
-  }  
-}
-void stopChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
-  midiInterface.sendRealTime(midi::Stop);
-  channelCountIn[channel] = -1;
-  channelBars[channel] = -1;
-  switch(channel) {
-    case 0:
-      channel1Pending.disable();
-      channel1PendingFlashComplete.disable();
-      analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 1:
-      channel2Pending.disable();
-      channel2PendingFlashComplete.disable();
-      analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 2:
-      channel3Pending.disable();
-      channel3PendingFlashComplete.disable();
-      analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 3:
-      channel4Pending.disable();
-      channel4PendingFlashComplete.disable();
-      analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
-      break;
-    case 4:
-      channel5Pending.disable();
-      channel5PendingFlashComplete.disable();
-      analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
-      break;
-  }  
-}
-/** Start playback for a channel
- *  @param: channel - the channel initiating the state change 
- *  @param: midiInterface - the midi interface pointer for the channel
- */
-void playChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
-  midiInterface.sendRealTime(midi::Start);
-  //midiInterface.sendSongPosition(0);
   
   switch(channel) {
     case 0:
       channel1Pending.disable();
       channel1PendingFlashComplete.disable();
-      analogWrite(CHANNEL_1_LAMP_PIN, buttonMaxBrightness);
+      analogWrite(CHANNEL_1_LAMP_PIN, buttonMinBrightness);
       break;
     case 1:
       channel2Pending.disable();
       channel2PendingFlashComplete.disable();
-      analogWrite(CHANNEL_2_LAMP_PIN, buttonMaxBrightness);
+      analogWrite(CHANNEL_2_LAMP_PIN, buttonMinBrightness);
       break;
     case 2:
       channel3Pending.disable();
       channel3PendingFlashComplete.disable();
-      analogWrite(CHANNEL_3_LAMP_PIN, buttonMaxBrightness);
+      analogWrite(CHANNEL_3_LAMP_PIN, buttonMinBrightness);
       break;
     case 3:
       channel4Pending.disable();
       channel4PendingFlashComplete.disable();
-      analogWrite(CHANNEL_4_LAMP_PIN, buttonMaxBrightness);
+      analogWrite(CHANNEL_4_LAMP_PIN, buttonMinBrightness);
       break;
     case 4:
       channel5Pending.disable();
       channel5PendingFlashComplete.disable();
-      analogWrite(CHANNEL_5_LAMP_PIN, buttonMaxBrightness);
+      analogWrite(CHANNEL_5_LAMP_PIN, buttonMinBrightness);
       break;
-  }
+  }  
 }
-void playChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
-  midiInterface.sendSongPosition(0);
-  midiInterface.sendRealTime(midi::Start);
 
+/** Start playback for a channel
+ *  @param: channel - the channel initiating the state change 
+ *  @param: midiInterface - the midi interface pointer for the channel
+ */
+template <class T> void playChannel(int channel, T &midiInterface) {
+  midiInterface.sendRealTime(midi::Start);
+ 
   switch(channel) {
     case 0:
       channel1Pending.disable();
@@ -378,39 +305,8 @@ void playChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface)
  *  @param: channel - the channel initiating the state change 
  *  @param: midiInterface - the midi interface pointer for the channel
  */
-void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface) {
+template <class T> void enqueueChannel(int channel, T &midiInterface) {
   channelCountIn[channel] = countIn;
-  if(playHead + countIn > 63) {
-    channelBars[channel] = playHead + countIn - 64;    
-  } else {
-    channelBars[channel] = playHead + countIn;
-  }
-    
-  switch(channel) {
-    case 0:
-      channel1Pending.restart();
-      break;
-    case 1:
-      channel2Pending.restart();
-      break;
-    case 2:
-      channel3Pending.restart();
-      break;
-    case 3:
-      channel4Pending.restart();
-      break;
-    case 4:
-      channel5Pending.restart();
-      break;
-  }
-}
-void enqueueChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface) {
-  channelCountIn[channel] = countIn;
-  if(playHead + countIn > 63) {
-    channelBars[channel] = playHead + countIn - 64;    
-  } else {
-    channelBars[channel] = playHead + countIn;
-  }
     
   switch(channel) {
     case 0:
@@ -587,7 +483,7 @@ void channel2InteractionCallback() {
     if (performanceStarted == 0) {
       startPerformance(1, midi2);
     } else if ( performanceStarted == 1 && channelCountIn[1] == 0) {
-      stopChannel(1, midi2);
+      //stopChannel(1, midi2);
     } else if ( performanceStarted == 1 && channelCountIn[1] > 0) {
       dequeueChannel(1);
     } else if ( performanceStarted == 1 && channelCountIn[1] == -1) {
@@ -787,12 +683,11 @@ void stopAllButtonInteractionCallback() {
     stopChannel(1, midi2);
     stopChannel(2, midi3);
     stopChannel(3, midi4);
-    stopChannel(4, midi5);
+    stopChannel(4, midi5); 
     comfortDownbeat.restart();  
     performanceStarted = 0;
     for(int i = 0; i < channelCountInLength; i++) {
       channelCountIn[i] = -1; 
-      channelBars[i] = -1;
     }
     clocks = 1;
     quarterNotes = 1;
@@ -899,23 +794,18 @@ void midiClockCallback() {
   }
 
   if(channelCountIn[0] == 0) {
-    channelBars[0] = -1;
     midi1.sendRealTime(midi::Clock);
   }
   if(channelCountIn[1] == 0) {
-    channelBars[1] = -1;
     midi2.sendRealTime(midi::Clock);
   }
   if(channelCountIn[2] == 0) {
-    channelBars[2] = -1;
     midi3.sendRealTime(midi::Clock);
   }
   if(channelCountIn[3] == 0) {
-    channelBars[3] = -1;
     midi4.sendRealTime(midi::Clock);
   }
   if(channelCountIn[4] == 0) {
-    channelBars[4] = -1;
     midi5.sendRealTime(midi::Clock);
   }
     

@@ -98,16 +98,13 @@ SOFTWARE. */
   MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, midi4);
   MIDI_CREATE_INSTANCE(AltSoftSerial, altSerial, midi5);
 
-  //callback declarations
+  template <class T> void stopChannel(int channel, T &midiInterface);
+  template <class T> void playChannel(int channel, T &midiInterface); 
+  template <class T> void enqueueChannel(int channel, T &midiInterface);
+  template <class T> void startPerformance(int channel, T &midiInterface);
+  template <class T> void playChannel(int channel, T &midiInterface); 
+
   void dequeueChannel(int channel);
-  void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
-  void stopChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
-  void playChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface); 
-  void enqueueChannel(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
-  void startPerformance(int channel, midi::MidiInterface<HardwareSerial> &midiInterface);
-  void stopChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface);
-  void playChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface); 
-  void enqueueChannel(int channel, midi::MidiInterface<AltSoftSerial> &midiInterface);
   void channel1InteractionCallback();
   void channel1InteractionDebounceCallback();
   void channel1PendingCallback();
@@ -168,7 +165,6 @@ SOFTWARE. */
   int performanceStarted = 0;
   int channelCountIn[] = {-1,-1,-1,-1,-1};
   int channelCountInLength = 5;
-  int channelBars[] = {-1,-1,-1,-1,-1};
   int channelBarsLength = 5;
   int matrixColumn = 0;
   int matrixRow = 0;
